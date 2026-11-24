@@ -14,6 +14,8 @@ function depth(id){let d=0,n=get(id);while(n&&n.parent){d++;n=get(n.parent);}ret
 function visible(){const out=[],m=current();function walk(id){const n=m.nodes[id];if(!n)return;out.push(id);if(!n.collapsed)n.children.forEach(walk);}walk(m.root);return out;}
 function arrange(){const m=current();let row=0;function place(id,d){const n=m.nodes[id];n.depth=d;if(n.collapsed||!n.children.length){n.y=90+row*92;row++;}else{const start=row;n.children.forEach(c=>place(c,d+1));n.y=90+(start+row-1)*46;}n.x=150+d*290;}place(m.root,0);const ids=visible();$("mapCanvas").style.width=Math.max(1800,600+Math.max(0,...ids.map(id=>m.nodes[id].x)))+"px";$("mapCanvas").style.height=Math.max(900,250+Math.max(0,...ids.map(id=>m.nodes[id].y)))+"px";}
 function transform(){$("mapCanvas").style.transform="translate("+panX+"px,"+panY+"px) scale("+zoom+")";$("zoomLabel").textContent=Math.round(zoom*100)+"%";}
+function zoomAt(nextZoom,clientX,clientY){const wrap=$("canvasWrap"),rect=wrap.getBoundingClientRect(),x=clientX-rect.left,y=clientY-rect.top,worldX=(x-panX)/zoom,worldY=(y-panY)/zoom;zoom=Math.max(.2,Math.min(3.5,nextZoom));panX=x-worldX*zoom;panY=y-worldY*zoom;transform();}
+function zoomFromCenter(factor){const r=$("canvasWrap").getBoundingClientRect();zoomAt(zoom*factor,r.left+r.width/2,r.top+r.height/2);}
 function render(){const m=current();if(!m)return;arrange();const layer=$("nodesLayer"),svg=$("connectors"),ids=visible();layer.innerHTML="";svg.innerHTML="";svg.setAttribute("viewBox","0 0 "+$("mapCanvas").offsetWidth+" "+$("mapCanvas").offsetHeight);
 ids.forEach(id=>{const n=m.nodes[id];if(n.parent&&ids.includes(n.parent)){const p=m.nodes[n.parent],path=document.createElementNS("http://www.w3.org/2000/svg","path");const x1=p.x+170,y1=p.y+22,x2=n.x,y2=n.y+22,mid=(x1+x2)/2;path.setAttribute("d","M "+x1+" "+y1+" C "+mid+" "+y1+", "+mid+" "+y2+", "+x2+" "+y2);path.setAttribute("class","connector");svg.appendChild(path);}
 const el=document.createElement("div");el.className="node"+(id===m.root?" root":" child-"+((Math.max(1,n.depth)-1)%4+1))+(id===selectedId?" selected":"");el.style.left=n.x+"px";el.style.top=n.y+"px";el.dataset.id=id;
@@ -35,7 +37,7 @@ $("newMapBtn").onclick=$("dashboardNewBtn").onclick=$("startBlankBtn").onclick=(
 $("workspaceBtn").onclick=dashboard;$("templatesBtn").onclick=()=>{dashboard();document.querySelector(".quick-ideas").scrollIntoView({behavior:"smooth"});};
 $("mapTitle").onchange=e=>{current().title=e.target.value.trim()||"Untitled map";render();save();};
 $("addNodeBtn").onclick=()=>openDialog("add",selectedId);$("addChildBtn").onclick=()=>openDialog("child",selectedId||current().root);$("renameBtn").onclick=()=>selectedId&&openDialog("rename",selectedId);$("deleteBtn").onclick=deleteSelected;
-$("zoomIn").onclick=()=>{zoom=Math.min(1.8,zoom+.1);transform();};$("zoomOut").onclick=()=>{zoom=Math.max(.35,zoom-.1);transform();};
+$("zoomIn").onclick=()=>zoomFromCenter(1.2);$("zoomOut").onclick=()=>zoomFromCenter(1/1.2);
 function fit(){zoom=1;panX=25;panY=20;transform();}$("fitBtn").onclick=$("centerBtn").onclick=fit;
 $("collapseBtn").onclick=()=>{Object.values(current().nodes).forEach(n=>{if(n.children.length)n.collapsed=true;});current().nodes[current().root].collapsed=false;render();save();};
 $("expandBtn").onclick=()=>{Object.values(current().nodes).forEach(n=>n.collapsed=false);render();save();};
@@ -54,7 +56,7 @@ $("canvasWrap").addEventListener("pointermove",e=>{
 });
 function endCanvasPointer(e){activePointers.delete(e.pointerId);if(activePointers.size<2)pinchStart=null;if(activePointers.size===1){const p=[...activePointers.values()][0];panning={x:p.x-panX,y:p.y-panY};}else panning=null;if(!activePointers.size)$("canvasWrap").classList.remove("is-panning");}
 $("canvasWrap").addEventListener("pointerup",endCanvasPointer);$("canvasWrap").addEventListener("pointercancel",endCanvasPointer);
-$("canvasWrap").addEventListener("wheel",e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();zoom=Math.max(.35,Math.min(1.8,zoom+(e.deltaY<0?.05:-.05)));transform();}},{passive:false});
+$("canvasWrap").addEventListener("wheel",e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();zoomAt(zoom*(e.deltaY<0?1.1:1/1.1),e.clientX,e.clientY);}},{passive:false});
 function download(name,data,type="application/json"){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function exportMap(){const m=current();download((m.title||"mind-map").toLowerCase().replace(/[^a-z0-9]+/g,"-")+".json",JSON.stringify(m,null,2));}
 $("exportBtn").onclick=exportMap;$("shareBtn").onclick=()=>{exportMap();$("saveStatus").textContent="● JSON backup downloaded";};
