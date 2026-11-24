@@ -318,7 +318,14 @@ function startStudyMode(){
  const definitionParts=[];if(root.definition)definitionParts.push(root.definition);
  theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\n"+node.definition:""));});
  studySlides=[{label:"Definition",content:definitionParts.join("\n\n").trim()||"Add a definition using the ⓘ button on this topic. Theory notes from its branches will also appear here."}];
- ["Syntax","Code","Example"].forEach(label=>{const matches=descendants.filter(node=>kind(node)===label);if(matches.length){studySlides.push({label,content:matches.map(contentFor).filter(Boolean).join("\n\n")||("Add "+label.toLowerCase()+" content to this branch.")});}});
+ const hasProgrammingSections=descendants.some(node=>kind(node));
+ if(hasProgrammingSections){
+  ["Syntax","Code","Example"].forEach(label=>{
+   const matches=descendants.filter(node=>kind(node)===label);
+   const content=matches.map(contentFor).filter(Boolean).join("\n\n");
+   studySlides.push({label,content:content||("No "+label.toLowerCase()+" content has been added yet.")});
+  });
+ }
  studyIndex=0;$("studyTopicTitle").textContent=root.text+" · Study Mode";renderStudySlide();$("studyDialog").showModal();
 }
 function renderStudySlide(){
