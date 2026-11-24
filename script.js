@@ -316,7 +316,7 @@ function saveStudyTable(){
 function renderStudyTable(){
  const table=$("studyPointsTable");if(!table||!studyTableData)return;
  const esc=value=>String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
- table.innerHTML="<thead><tr>"+studyTableData.headers.map((h,i)=>'<th><input class="study-table-header" data-col="'+i+'" aria-label="Column '+(i+1)+' heading" placeholder="Column '+(i+1)+'" value="'+esc(h)+'"></th>').join("")+"</tr></thead><tbody>"+studyTableData.rows.map((row,r)=>"<tr>"+row.map((v,c)=>'<td><textarea data-row="'+r+'" data-col="'+c+'" aria-label="Point '+(r+1)+', column '+(c+1)+'" placeholder="Write a point…">'+esc(v)+'</textarea></td>').join("")+"</tr>").join("")+"</tbody>";
+ table.innerHTML="<thead><tr>"+studyTableData.headers.map((h,i)=>'<th><input class="study-table-header" data-col="'+i+'" aria-label="Column '+(i+1)+' heading" placeholder="Column '+(i+1)+'" value="'+esc(h)+'"></th>').join("")+'<th class="study-row-delete-head"></th></tr></thead><tbody>'+studyTableData.rows.map((row,r)=>"<tr>"+row.map((v,c)=>'<td><textarea data-row="'+r+'" data-col="'+c+'" aria-label="Point '+(r+1)+', column '+(c+1)+'" placeholder="Write a point…">'+esc(v)+'</textarea></td>').join("")+'<td class="study-row-delete-cell"><button type="button" class="study-delete-row" data-delete-row="'+r+'" aria-label="Delete row">×</button></td></tr>').join("")+"</tbody>";
 }
 function startStudyMode(topicId=selectedId){
  const m=current();if(!m)return;const root=get(topicId)||get(selectedId)||get(m.root);if(!root)return;
@@ -359,6 +359,15 @@ function moveStudySlide(direction){if(studyEditing||studySlides[studyIndex]?.key
 $("studySlideContent").onclick=()=>{if(studyEditing)return;studyEditing=true;renderStudySlide();$("studySlideEditor").focus();};
 $("studySaveSlideBtn").onclick=()=>{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();studyEditing=false;renderStudySlide();};
 $("studySectionSelect").onchange=()=>{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();const key=$("studySectionSelect").value;studyIndex=studySlides.findIndex(slide=>slide.key===key);if(studyIndex<0)return;studyEditing=key!=="table"&&!String(studySlides[studyIndex].content||"").trim();renderStudySlide();if(studyEditing)$("studySlideEditor").focus();};
+$("studyPointsTable").addEventListener("click",e=>{
+ const button=e.target.closest("[data-delete-row]");
+ if(!button||!studyTableData)return;
+ const rowIndex=Number(button.dataset.deleteRow);
+ if(!Number.isInteger(rowIndex)||rowIndex<0||rowIndex>=studyTableData.rows.length)return;
+ studyTableData.rows.splice(rowIndex,1);
+ renderStudyTable();
+ saveStudyTable();
+});
 $("studyPointsTable").addEventListener("input",e=>{
  const target=e.target;if(target.matches(".study-table-header"))studyTableData.headers[Number(target.dataset.col)]=target.value;
  else if(target.matches("textarea[data-row]"))studyTableData.rows[Number(target.dataset.row)][Number(target.dataset.col)]=target.value;
@@ -379,7 +388,15 @@ $("studyPointsTable").addEventListener("keydown",e=>{
  if(nextCell){nextCell.focus();nextCell.scrollIntoView({block:"nearest",inline:"nearest"});}
 });
 $("studyPrevBtn").onclick=()=>moveStudySlide(-1);
-$("studyNextBtn").onclick=()=>{const dialog=$("studyDialog");try{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();}finally{studyEditing=false;if(dialog.open)dialog.close();}};
+$("studyNextBtn").addEventListener("click",e=>{
+ e.preventDefault();
+ const dialog=$("studyDialog");
+ try{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();}
+ catch(error){console.error("Study Mode save failed:",error);}
+ studyEditing=false;
+ if(dialog.open)dialog.close();
+ dialog.removeAttribute("open");
+});
 let studyTouchX=0;
 $("studySlide").addEventListener("touchstart",e=>{studyTouchX=e.changedTouches[0].clientX;},{passive:true});
 $("studySlide").addEventListener("touchend",e=>{const delta=e.changedTouches[0].clientX-studyTouchX;if(Math.abs(delta)>45)moveStudySlide(delta<0?1:-1);},{passive:true});
