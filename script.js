@@ -3,7 +3,7 @@ const $ = id => document.getElementById(id);
 const KEY = "memoryMindMapsV1";
 let maps=[], activeId=null, selectedId=null, zoom=1, panX=0, panY=0, drag=null, panning=null, mode="add", target=null, moveMode=false;
 const uid=()=>Math.random().toString(36).slice(2,10);
-const makeNode=(text,parent=null)=>({id:uid(),text,parent,children:[],collapsed:false,x:0,y:0});
+const makeNode=(text,parent=null,definition="")=>({id:uid(),text,definition,parent,children:[],collapsed:false,x:0,y:0});
 function makeMap(title="Untitled map",rootText="Your big idea"){const r=makeNode(rootText);return{id:uid(),title,root:r.id,nodes:{[r.id]:r},updated:Date.now()};}
 function current(){return maps.find(m=>m.id===activeId);}
 function get(id){return current()?.nodes[id];}
@@ -19,7 +19,7 @@ function zoomFromCenter(factor){const r=$("canvasWrap").getBoundingClientRect();
 function render(){const m=current();if(!m)return;closeMoveMenu();arrange();const layer=$("nodesLayer"),svg=$("connectors"),ids=visible();layer.innerHTML="";svg.innerHTML="";svg.setAttribute("viewBox","0 0 "+$("mapCanvas").offsetWidth+" "+$("mapCanvas").offsetHeight);
 ids.forEach(id=>{const n=m.nodes[id];if(n.parent&&ids.includes(n.parent)){const p=m.nodes[n.parent],path=document.createElementNS("http://www.w3.org/2000/svg","path");const x1=p.x+170,y1=p.y+22,x2=n.x,y2=n.y+22,mid=(x1+x2)/2;path.setAttribute("d","M "+x1+" "+y1+" C "+mid+" "+y1+", "+mid+" "+y2+", "+x2+" "+y2);path.setAttribute("class","connector");svg.appendChild(path);}
 const el=document.createElement("div");el.className="node"+(id===m.root?" root":" child-"+((Math.max(1,n.depth)-1)%4+1))+(id===selectedId?" selected":"");el.style.left=n.x+"px";el.style.top=n.y+"px";el.dataset.id=id;
-const label=document.createElement("span");label.className="node-text";label.textContent=n.text;el.appendChild(label);if(id===selectedId&&moveMode){const move=document.createElement("span");move.className="node-move active";move.textContent="MOVE MODE";el.appendChild(move);}
+const label=document.createElement("span");label.className="node-text";label.textContent=n.text;el.appendChild(label);const info=document.createElement("button");info.type="button";info.className="node-info"+(n.definition?"":" empty");info.textContent="i";info.title=n.definition?"View or edit definition":"Add a definition";info.setAttribute("aria-label","View or edit definition for "+n.text);info.addEventListener("pointerdown",e=>e.stopPropagation());info.onclick=e=>{e.stopPropagation();openDefinition(id);};el.appendChild(info);if(id===selectedId&&moveMode){const move=document.createElement("span");move.className="node-move active";move.textContent="MOVE MODE";el.appendChild(move);}
 if(n.children.length){const toggle=document.createElement("button");toggle.className="node-toggle";toggle.textContent=n.collapsed?"+":"−";toggle.title=n.collapsed?"Expand branches":"Collapse branches";toggle.addEventListener("pointerdown",e=>e.stopPropagation());toggle.onclick=e=>{e.stopPropagation();n.collapsed=!n.collapsed;render();save();};el.appendChild(toggle);}
 el.onclick=()=>{if(drag?.moved)return;selectedId=id;render();};el.ondblclick=e=>{e.stopPropagation();selectedId=id;openDialog("rename",id);};el.addEventListener("contextmenu",e=>{e.preventDefault();showMoveMenu(id,e.clientX,e.clientY);});el.addEventListener("pointerdown",e=>beginDrag(e,id,el));layer.appendChild(el);});
 $("nodeCount").textContent=Object.keys(m.nodes).length+" topics";$("mapTitle").value=m.title;$("crumbTitle").textContent=m.title;transform();renderLists();}
@@ -61,6 +61,9 @@ function dashboard(){$("dashboard").hidden=false;$("editor").hidden=true;$("welc
 function editor(){ $("dashboard").hidden=true;$("welcomeStrip").hidden=true;$("editor").hidden=false;render();}
 function openMap(id){activeId=id;selectedId=current().root;zoom=1;panX=25;panY=20;editor();save();}
 function createMap(title="Untitled map",root="Your big idea"){const m=makeMap(title,root);maps.unshift(m);activeId=m.id;selectedId=m.root;zoom=1;panX=25;panY=20;save();editor();}
+let definitionTarget=null;
+function openDefinition(id){const n=get(id);if(!n)return;definitionTarget=id;$("definitionTitle").textContent=n.text;$("definitionText").value=n.definition||"";$("definitionDialog").showModal();}
+$("saveDefinitionBtn").onclick=()=>{const n=get(definitionTarget);if(!n)return;n.definition=$("definitionText").value.trim();$("definitionDialog").close();render();save();};
 function openDialog(which,id){mode=which;target=id;$("nodeDialogTitle").textContent=which==="rename"?"Rename topic":which==="child"?"Add a branch":"Add a topic";$("nodeText").value=which==="rename"?get(id).text:"";$("nodeDialog").showModal();setTimeout(()=>$("nodeText").focus(),50);}
 $("nodeForm").addEventListener("submit",e=>{if(e.submitter?.value==="cancel")return;e.preventDefault();const value=$("nodeText").value.trim();if(!value)return;if(mode==="rename")get(target).text=value;else{const parentId=mode==="child"?target:current().root,p=get(parentId),n=makeNode(value,parentId);current().nodes[n.id]=n;p.children.push(n.id);p.collapsed=false;selectedId=n.id;}$("nodeDialog").close();render();save();});
 $("nodeText").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("nodeForm").requestSubmit($("nodeSaveBtn"));}});
