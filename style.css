@@ -140,3 +140,15 @@
 .account-btn[hidden]{display:none}
 
 .map-card-actions{display:flex;justify-content:flex-end;margin-top:10px}.map-card-rename{border:1px solid #41465b;background:#222638;color:#c8c0ff;border-radius:7px;padding:6px 9px;font-size:10px;font-weight:600}.map-card-rename:hover{border-color:#a99aff;background:#302b49}.map-card:focus-visible{outline:2px solid #a99aff;outline-offset:3px}
+
+/* Swipeable Study Mode */
+.study-dialog{width:min(680px,calc(100vw - 24px));max-width:680px;padding:clamp(17px,4vw,28px);background:#171b29;border:1px solid #454b63;border-radius:18px}
+.study-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.study-head h2{font:700 21px Manrope;margin:6px 0 0;overflow-wrap:anywhere}
+.study-progress{display:flex;align-items:center;gap:12px;margin:19px 0 14px;color:#aeb5c8;font-size:11px}.study-progress-track{height:5px;flex:1;border-radius:9px;background:#30364a;overflow:hidden}.study-progress-track i{display:block;height:100%;width:0;background:var(--purple);border-radius:9px;transition:width .2s}
+.study-slide{min-height:260px;max-height:52vh;overflow:auto;padding:22px;border:1px solid #383e54;border-radius:14px;background:linear-gradient(145deg,#202438,#171d2a);touch-action:pan-y}
+.study-slide-label{display:inline-block;margin-bottom:17px;color:#bdb2ff;font-size:10px;font-weight:800;letter-spacing:1.8px}
+.study-slide-content{color:#edf0f8;font-size:15px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere}
+.study-slide.study-code .study-slide-content{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.7;color:#b9f0d8}
+.study-controls{display:flex;justify-content:space-between;gap:10px;margin-top:17px}.study-controls button{min-width:112px}.study-controls button:disabled{opacity:.35;cursor:not-allowed}
+.study-hint{text-align:center;color:#858da3;font-size:10px;margin:13px 0 0}
+@media(max-width:520px){.study-slide{min-height:230px;padding:17px}.study-slide-content{font-size:14px}.study-controls button{flex:1;min-width:0}}
