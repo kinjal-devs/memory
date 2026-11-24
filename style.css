@@ -249,3 +249,15 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
  .zoom-controls{bottom:7px;left:7px}
  .center-view{bottom:7px;right:7px}
 }
+
+/* Compact mobile map tools: one ⋮ button opens all six existing actions */
+.editor-actions{display:flex;align-items:center;gap:8px}
+.editor-menu-toggle{display:none;width:36px;height:34px;border:1px solid #4a5068;border-radius:8px;background:#252a3b;color:#f4f2ff;font-size:25px;line-height:1;align-items:center;justify-content:center}
+@media(max-width:850px){
+ .editor-heading{width:100%;}
+ .editor-actions{position:relative;width:100%;justify-content:flex-end;min-height:35px;}
+ .editor-menu-toggle{display:inline-flex;}
+ .editor-tools{display:none;position:absolute;top:40px;right:0;z-index:30;width:min(270px,calc(100vw - 28px));padding:9px;background:#1b2030;border:1px solid #454b62;border-radius:11px;box-shadow:0 14px 36px #000b;grid-template-columns:1fr 1fr;gap:7px;}
+ .editor-tools.menu-open{display:grid;}
+ .editor-tools .tool-btn{width:100%;min-height:38px;padding:8px 7px;font-size:10px;white-space:normal;}
+}
