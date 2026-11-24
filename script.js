@@ -347,7 +347,7 @@ function renderStudySlide(){
  $("studySlideEditor").hidden=!studyEditing;
  $("studySlide").classList.toggle("study-code",slide.label==="Code");
  $("studyPrevBtn").disabled=studyIndex===0;
- $("studyNextBtn").textContent=studyIndex===studySlides.length-1?"Done":"Next";
+ $("studyNextBtn").textContent="Done";
  $("studySectionSelect").value=slide.key;
 }
 function moveStudySlide(direction){if(studyEditing){persistStudySlide();studyEditing=false;}const next=studyIndex+direction;if(next<0||next>=studySlides.length)return;studyIndex=next;renderStudySlide();}
@@ -355,7 +355,7 @@ $("studySlideContent").onclick=()=>{if(studyEditing)return;studyEditing=true;ren
 $("studySaveSlideBtn").onclick=()=>{if(studyEditing)persistStudySlide();studyEditing=false;renderStudySlide();};
 $("studySectionSelect").onchange=()=>{if(studyEditing)persistStudySlide();const key=$("studySectionSelect").value;studyIndex=studySlides.findIndex(slide=>slide.key===key);if(studyIndex<0)return;studyEditing=!String(studySlides[studyIndex].content||"").trim();renderStudySlide();if(studyEditing)$("studySlideEditor").focus();};
 $("studyPrevBtn").onclick=()=>moveStudySlide(-1);
-$("studyNextBtn").onclick=()=>{if(studyEditing){persistStudySlide();studyEditing=false;}if(studyIndex===studySlides.length-1)$("studyDialog").close();else{studyIndex++;renderStudySlide();}};
+$("studyNextBtn").onclick=()=>{if(studyEditing)persistStudySlide();studyEditing=false;$("studyDialog").close();};
 let studyTouchX=0;
 $("studySlide").addEventListener("touchstart",e=>{studyTouchX=e.changedTouches[0].clientX;},{passive:true});
 $("studySlide").addEventListener("touchend",e=>{const delta=e.changedTouches[0].clientX-studyTouchX;if(Math.abs(delta)>45)moveStudySlide(delta<0?1:-1);},{passive:true});
