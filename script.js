@@ -184,7 +184,13 @@ $("pdfChooseBtn").onclick=()=>$("pdfFile").click();
 $("jsonFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const m=JSON.parse(await f.text());if(!m.nodes||!m.root||!m.nodes[m.root])throw Error();importMap(m);}catch(err){alert("That file is not a valid Memory mind map JSON.");}e.target.value="";};
 const presets={"Study plan":["Study plan",["Subjects","Weekly timetable","Revision","Practice questions","Goals"]],"Project planner":["Project planner",["Purpose","Research","Tasks","Timeline","Resources","Next steps"]],"Brainstorm":["Brainstorm",["Problem","Ideas","Possibilities","Questions","Next actions"]],"Weekly goals":["Weekly goals",["Personal","Study / Work","Health","Important tasks","Things to look forward to"]]};
 document.querySelectorAll(".idea-card").forEach(b=>b.onclick=()=>{const [title,branches]=presets[b.dataset.template],m=makeMap(title,title);branches.forEach(t=>{const n=makeNode(t,m.root);m.nodes[n.id]=n;m.nodes[m.root].children.push(n.id);});maps.unshift(m);activeId=m.id;selectedId=m.root;editor();save();});
-$("mobileMenu").onclick=()=>$("sidebar").classList.toggle("open");$("mapList").onclick=()=>$("sidebar").classList.remove("open");
+function closeSidebar(){const side=$("sidebar"),button=$("mobileMenu");side.classList.remove("open");button.setAttribute("aria-expanded","false");button.setAttribute("aria-label","Open navigation menu");}
+$("mobileMenu").addEventListener("click",()=>{const side=$("sidebar"),open=!side.classList.contains("open");side.classList.toggle("open",open);$("mobileMenu").setAttribute("aria-expanded",String(open));$("mobileMenu").setAttribute("aria-label",open?"Close navigation menu":"Open navigation menu");});
+$("mapList").addEventListener("click",closeSidebar);
+$("workspaceBtn").addEventListener("click",closeSidebar);
+$("templatesBtn").addEventListener("click",closeSidebar);
+$("newMapBtn").addEventListener("click",closeSidebar);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSidebar();});
 
 $("pdfFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(!window.pdfjsLib)throw Error("PDF reader couldn't load. Please try pasting your notes instead.");pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";const doc=await pdfjsLib.getDocument(await f.arrayBuffer()).promise,parts=[];for(let i=1;i<=Math.min(doc.numPages,10);i++){const page=await doc.getPage(i),content=await page.getTextContent(),txt=content.items.map(x=>x.str).join(" ").trim();if(txt)parts.push(txt);}const source=parts.join("\n\n").slice(0,3800);if(!source)throw Error("No selectable text found in this PDF. It may be a scanned document.");$("importText").value="";$("importDialog").showModal();await createAIMindMap(source,f.name.replace(/\.pdf$/i,""));}catch(err){alert(err.message||"Could not read this PDF.");}e.target.value="";};
 
