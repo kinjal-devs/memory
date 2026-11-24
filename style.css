@@ -693,3 +693,10 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
     width:min(340px,calc(100vw - 20px)) !important;
   }
 }
+
+
+/* Compact dropdown for switching between the four Study Mode sections */
+.study-section-select{appearance:auto;max-width:112px;min-height:0;padding:3px 18px 3px 5px;border:0;border-radius:0;background:transparent;color:#aeb9d0;font:11px/1.4 "DM Sans",sans-serif;outline:none;}
+.study-section-select:focus{color:#fff;}
+.study-section-select option{background:#202638;color:#eef0f7;}
+@media(max-width:600px){.study-section-select{max-width:100px;font-size:10px;}}
