@@ -81,3 +81,35 @@
 @media(max-width:420px){
   #pdfChooseBtn{flex:1;padding:10px 12px}
 }
+
+
+/* Match the native JSON file chooser to the PDF upload button */
+#jsonFile{
+  display:block;
+  width:100%;
+  max-width:100%;
+  margin-top:9px;
+  color:#c9c5dd;
+  font:12px 'DM Sans',sans-serif;
+}
+#jsonFile::file-selector-button{
+  min-height:39px;
+  margin-right:11px;
+  padding:9px 15px;
+  border:1px solid #7770b8;
+  border-radius:10px;
+  background:linear-gradient(135deg,#292640 0%,#20283a 55%,#1d3438 100%);
+  color:#e8e3ff;
+  font:800 12px 'DM Sans',sans-serif;
+  letter-spacing:.2px;
+  box-shadow:inset 0 1px 0 #ffffff18,0 5px 16px #090b1680;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+#jsonFile::file-selector-button:hover{
+  transform:translateY(-1px);
+  border-color:#b7aaff;
+  box-shadow:inset 0 1px 0 #ffffff22,0 8px 22px #090b16a6;
+  filter:brightness(1.12);
+}
+#jsonFile::file-selector-button:active{transform:scale(.98)}
