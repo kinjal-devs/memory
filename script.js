@@ -191,7 +191,7 @@ $("pdfFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(!w
 
 
 $("signOutBtn").onclick=async()=>{try{await signOut(auth);}catch(error){alert("Couldn't sign out: "+(error.message||"Please try again."));}};
-getRedirectResult(auth).then(result=>{if(result?.user){cloudUser=result.user;updateAccountUI(result.user);setCloudStatus("Google connected · loading your maps…");}}).catch(error=>{console.error("Google redirect sign-in failed:",error);setCloudStatus("Google sign-in error · "+(error.code||"please try again"));});
-onAuthStateChanged(auth,async user=>{cloudUser=user;updateAccountUI(user);if(user)await syncCloud();});
+const redirectCheck=getRedirectResult(auth).then(result=>{if(result?.user){cloudUser=result.user;updateAccountUI(result.user);setCloudStatus("Google connected · loading your maps…");}return result;}).catch(error=>{console.error("Google redirect sign-in failed:",error);return {error};});
+onAuthStateChanged(auth,async user=>{cloudUser=user;updateAccountUI(user);if(user){await syncCloud();}else{const result=await redirectCheck;if(result?.error)setCloudStatus("Google sign-in error · "+(result.error.code||result.error.message||"please try again"));}});
 load();renderLists();dashboard();
 })();
