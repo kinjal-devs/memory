@@ -195,7 +195,7 @@ $("exportBtn").onclick=exportMap;$("shareBtn").onclick=()=>{exportMap();$("saveS
 function parseOutline(text){const lines=text.split(/\r?\n/).filter(x=>x.trim());if(!lines.length)return null;const rootText=lines[0].trim().replace(/^[-*•]\s*/,"");const m=makeMap(rootText,rootText),stack=[{indent:-1,id:m.root}];for(const raw of lines.slice(1)){const indent=(raw.match(/^\s*/)||[""])[0].replace(/\t/g,"    ").length,label=raw.trim().replace(/^[-*•]\s*/,"").replace(/^#+\s*/,"");if(!label)continue;while(stack.length>1&&stack[stack.length-1].indent>=indent)stack.pop();const parent=stack[stack.length-1].id,n=makeNode(label,parent);m.nodes[n.id]=n;m.nodes[parent].children.push(n.id);stack.push({indent,id:n.id});}return m;}
 function importMap(m){m.id=uid();m.updated=Date.now();maps.unshift(m);activeId=m.id;selectedId=m.root;$("importDialog").close();editor();save();}
 function splitIntoChunks(source,maxLength=3000){
- const paragraphs=String(source||"").split(/\\n\\s*\\n/);
+ const paragraphs=String(source||"").split(/\n\\s*\n/);
  const chunks=[];let current="";
  for(const paragraph of paragraphs){
   const part=paragraph.trim();if(!part)continue;
@@ -205,13 +205,13 @@ function splitIntoChunks(source,maxLength=3000){
    continue;
   }
   if(current&&current.length+part.length+2>maxLength){chunks.push(current);current=part;}
-  else current+=(current?"\\n\\n":"")+part;
+  else current+=(current?"\n\n":"")+part;
  }
  if(current)chunks.push(current);
  return chunks;
 }
 async function requestMindMapOutline(source){
- const response=await fetch("https://proud-hill-dd6fmemory-ai.kinjalsj00.workers.dev/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task:"organize",topic:"Create a mind map from this source. Return ONLY a nested outline. First line: a short title. Each following line must be a subtopic, using two spaces for each hierarchy level. No introduction, numbering, or conclusion.\\n\\n"+source})});
+ const response=await fetch("https://proud-hill-dd6fmemory-ai.kinjalsj00.workers.dev/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task:"organize",topic:"Create a mind map from this source. Return ONLY a nested outline. First line: a short title. Each following line must be a subtopic, using two spaces for each hierarchy level. No introduction, numbering, or conclusion.\n\n"+source})});
  const data=await response.json();
  if(!response.ok)throw new Error(data.error||"Gemini request failed.");
  const map=parseOutline(String(data.answer||"").trim());
@@ -308,20 +308,20 @@ function startStudyMode(topicId=selectedId){
  const descendants=[];
  function collect(id){const node=m.nodes[id];if(!node)return;descendants.push(node);node.children.forEach(collect);}
  root.children.forEach(collect);
- const kind=node=>{const label=String(node.text||"").trim().toLowerCase();if(/^syntax\\b/.test(label))return "Syntax";if(/^code\\b/.test(label))return "Code";if(/^example\\b/.test(label))return "Example";return "";};
+ const kind=node=>{const label=String(node.text||"").trim().toLowerCase();if(/^syntax\b/.test(label))return "Syntax";if(/^code\b/.test(label))return "Code";if(/^example\b/.test(label))return "Example";return "";};
  const contentFor=node=>{
   const parts=[];if(node.definition)parts.push(node.definition);
-  const addChildren=id=>{const parent=m.nodes[id];if(!parent)return;parent.children.forEach(childId=>{const child=m.nodes[childId];if(!child)return;parts.push(child.text+(child.definition?"\\n"+child.definition:""));addChildren(childId);});};
-  addChildren(node.id);return parts.join("\\n\\n").trim();
+  const addChildren=id=>{const parent=m.nodes[id];if(!parent)return;parent.children.forEach(childId=>{const child=m.nodes[childId];if(!child)return;parts.push(child.text+(child.definition?"\n"+child.definition:""));addChildren(childId);});};
+  addChildren(node.id);return parts.join("\n\n").trim();
  };
  const insideProgrammingSection=node=>{let parent=node.parent;while(parent&&parent!==root.id){const ancestor=m.nodes[parent];if(!ancestor)break;if(kind(ancestor))return true;parent=ancestor.parent;}return false;};
  const theory=descendants.filter(node=>!kind(node)&&!insideProgrammingSection(node));
  const definitionParts=[];if(root.definition)definitionParts.push(root.definition);
- theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\\n"+node.definition:""));});
- const sectionContent=label=>descendants.filter(node=>kind(node)===label).map(contentFor).filter(Boolean).join("\\n\\n");
+ theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\n"+node.definition:""));});
+ const sectionContent=label=>descendants.filter(node=>kind(node)===label).map(contentFor).filter(Boolean).join("\n\n");
  const saved=root.studyContent||{};
  studySlides=[
-  {key:"definition",label:"Definition",content:saved.definition??(definitionParts.join("\\n\\n").trim())},
+  {key:"definition",label:"Definition",content:saved.definition??(definitionParts.join("\n\n").trim())},
   {key:"syntax",label:"Syntax",content:saved.syntax??sectionContent("Syntax")},
   {key:"code",label:"Code",content:saved.code??sectionContent("Code")},
   {key:"example",label:"Example",content:saved.example??sectionContent("Example")}
