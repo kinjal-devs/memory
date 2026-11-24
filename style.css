@@ -22,3 +22,6 @@
 .move-context-menu button{display:block;width:100%;padding:10px 12px;border:0;border-radius:6px;background:#b7aaff;color:#171426;font-size:12px;font-weight:800;text-align:left;cursor:pointer}
 .move-context-menu button:active{filter:brightness(.92)}
 .node-move{font-size:9px;color:#d6ceff;letter-spacing:.5px;white-space:nowrap}
+
+/* Topic definition indicator and editor */
+.node-info{flex:0 0 22px;width:22px;height:22px;padding:0;border:1px solid #aaa0e8;border-radius:50%;background:#ffffff16;color:#e7e1ff;font-size:12px;font-weight:800;line-height:20px;text-align:center;cursor:pointer}.node-info:active{background:#b7aaff;color:#171426}.node-info.empty{opacity:.65}
