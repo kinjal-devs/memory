@@ -187,7 +187,49 @@ const presets={"Study plan":["Study plan",["Subjects","Weekly timetable","Revisi
 document.querySelectorAll(".idea-card").forEach(b=>b.onclick=()=>{const [title,branches]=presets[b.dataset.template],m=makeMap(title,title);branches.forEach(t=>{const n=makeNode(t,m.root);m.nodes[n.id]=n;m.nodes[m.root].children.push(n.id);});maps.unshift(m);activeId=m.id;selectedId=m.root;editor();save();});
 
 
-$("pdfFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(!window.pdfjsLib)throw Error("PDF reader couldn't load. Please try pasting your notes instead.");pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";const doc=await pdfjsLib.getDocument(await f.arrayBuffer()).promise,parts=[];for(let i=1;i<=Math.min(doc.numPages,10);i++){const page=await doc.getPage(i),content=await page.getTextContent(),txt=content.items.map(x=>x.str).join(" ").trim();if(txt)parts.push(txt);}const source=parts.join("\n\n").slice(0,3800);if(!source)throw Error("No selectable text found in this PDF. It may be a scanned document.");$("importText").value="";$("importDialog").showModal();await createAIMindMap(source,f.name.replace(/\.pdf$/i,""));}catch(err){alert(err.message||"Could not read this PDF.");}e.target.value="";};
+async function loadTesseract(){if(window.Tesseract)return window.Tesseract;await new Promise((resolve,reject)=>{const script=document.createElement("script");script.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";script.onload=resolve;script.onerror=()=>reject(new Error("Handwriting reader couldn't load. Check your internet connection and try again."));document.head.appendChild(script);});if(!window.Tesseract)throw new Error("Handwriting reader did not start.");return window.Tesseract;}
+async function readScannedPdf(pdfDoc){
+ const Tesseract=await loadTesseract(),worker=await Tesseract.createWorker("eng",1,{logger:info=>{if(info.status==="recognizing text")$("aiStatus").textContent="Reading handwriting… "+Math.round((info.progress||0)*100)+"%";}});
+ const parts=[];
+ try{
+  for(let i=1;i<=Math.min(pdfDoc.numPages,8);i++){
+   $("aiStatus").textContent="Reading handwritten page "+i+" of "+Math.min(pdfDoc.numPages,8)+"…";
+   const page=await pdfDoc.getPage(i),viewport=page.getViewport({scale:2}),canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
+   canvas.width=viewport.width;canvas.height=viewport.height;
+   await page.render({canvasContext:ctx,viewport}).promise;
+   const result=await worker.recognize(canvas);
+   const text=String(result.data.text||"").trim();if(text)parts.push(text);
+   canvas.width=0;canvas.height=0;
+  }
+ }finally{await worker.terminate();}
+ return parts.join("\n\n").trim();
+}
+$("pdfFile").onchange=async e=>{
+ const file=e.target.files[0];if(!file)return;
+ const status=$("aiStatus");status.textContent="Opening your PDF…";
+ try{
+  if(!window.pdfjsLib)throw new Error("PDF reader couldn't load. Refresh the page and try again.");
+  pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const pdfDoc=await pdfjsLib.getDocument(await file.arrayBuffer()).promise,parts=[];
+  for(let i=1;i<=Math.min(pdfDoc.numPages,10);i++){
+   status.textContent="Extracting text from page "+i+"…";
+   const page=await pdfDoc.getPage(i),content=await page.getTextContent(),txt=content.items.map(x=>x.str).join(" ").trim();
+   if(txt)parts.push(txt);
+  }
+  let source=parts.join("\n\n").trim();
+  if(source.length<30){
+   status.textContent="This looks like a scanned or handwritten PDF. Starting handwriting recognition…";
+   source=await readScannedPdf(pdfDoc);
+  }
+  source=source.slice(0,3800);
+  if(!source||source.length<10)throw new Error("I couldn't recognize enough writing in this PDF. Try a clearer, well-lit scan with darker handwriting.");
+  $("importText").value=source;
+  status.textContent="PDF text extracted. Creating your AI mind map…";
+  if(!$("importDialog").open)$("importDialog").showModal();
+  await createAIMindMap(source,file.name.replace(/\.pdf$/i,""));
+ }catch(err){status.textContent="";alert("Couldn't read this PDF: "+(err.message||"Please try a clearer scan."));}
+ e.target.value="";
+};
 
 
 $("signOutBtn").onclick=async()=>{try{await signOut(auth);}catch(error){alert("Couldn't sign out: "+(error.message||"Please try again."));}};
