@@ -179,7 +179,57 @@ function exportMap(){const m=current();download((m.title||"mind-map").toLowerCas
 $("exportBtn").onclick=exportMap;$("shareBtn").onclick=()=>{exportMap();$("saveStatus").textContent="● JSON backup downloaded";};
 function parseOutline(text){const lines=text.split(/\r?\n/).filter(x=>x.trim());if(!lines.length)return null;const rootText=lines[0].trim().replace(/^[-*•]\s*/,"");const m=makeMap(rootText,rootText),stack=[{indent:-1,id:m.root}];for(const raw of lines.slice(1)){const indent=(raw.match(/^\s*/)||[""])[0].replace(/\t/g,"    ").length,label=raw.trim().replace(/^[-*•]\s*/,"").replace(/^#+\s*/,"");if(!label)continue;while(stack.length>1&&stack[stack.length-1].indent>=indent)stack.pop();const parent=stack[stack.length-1].id,n=makeNode(label,parent);m.nodes[n.id]=n;m.nodes[parent].children.push(n.id);stack.push({indent,id:n.id});}return m;}
 function importMap(m){m.id=uid();m.updated=Date.now();maps.unshift(m);activeId=m.id;selectedId=m.root;$("importDialog").close();editor();save();}
-async function createAIMindMap(source,title="Your AI mind map"){const clean=String(source||"").trim();if(!clean){alert("Add notes or upload a PDF first.");return;}if(clean.length>3800){alert("Please keep the extracted notes under 3,800 characters for now.");return;}const btn=$("importTextBtn"),status=$("aiStatus");btn.disabled=true;btn.textContent="Gemini is creating…";if(status)status.textContent="Reading your material and building your mind map…";try{const response=await fetch("https://proud-hill-dd6fmemory-ai.kinjalsj00.workers.dev/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task:"organize",topic:"Create a mind map from this source. Return ONLY a nested outline. First line: a short title. Each following line must be a subtopic, using two spaces for each hierarchy level. No introduction, numbering, or conclusion.\n\n"+clean})});const data=await response.json();if(!response.ok)throw new Error(data.error||"Gemini request failed.");const answer=String(data.answer||"").trim();const map=parseOutline(answer);if(!map||!map.nodes||!map.nodes[map.root]||!map.nodes[map.root].children.length)throw new Error("Gemini's reply wasn't a usable mind-map outline. Please try again with clearer notes.");map.title=map.nodes[map.root].text||title;importMap(map);}catch(error){alert("Couldn't create the AI mind map: "+(error.message||"Please try again."));if(status)status.textContent="";}finally{btn.disabled=false;btn.textContent="✧ Generate AI mind map";}} 
+function splitIntoChunks(source,maxLength=3000){
+ const paragraphs=String(source||"").split(/\\n\\s*\\n/);
+ const chunks=[];let current="";
+ for(const paragraph of paragraphs){
+  const part=paragraph.trim();if(!part)continue;
+  if(part.length>maxLength){
+   if(current){chunks.push(current);current="";}
+   for(let i=0;i<part.length;i+=maxLength)chunks.push(part.slice(i,i+maxLength));
+   continue;
+  }
+  if(current&&current.length+part.length+2>maxLength){chunks.push(current);current=part;}
+  else current+=(current?"\\n\\n":"")+part;
+ }
+ if(current)chunks.push(current);
+ return chunks;
+}
+async function requestMindMapOutline(source){
+ const response=await fetch("https://proud-hill-dd6fmemory-ai.kinjalsj00.workers.dev/",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task:"organize",topic:"Create a mind map from this source. Return ONLY a nested outline. First line: a short title. Each following line must be a subtopic, using two spaces for each hierarchy level. No introduction, numbering, or conclusion.\\n\\n"+source})});
+ const data=await response.json();
+ if(!response.ok)throw new Error(data.error||"Gemini request failed.");
+ const map=parseOutline(String(data.answer||"").trim());
+ if(!map||!map.nodes||!map.nodes[map.root]||!map.nodes[map.root].children.length)throw new Error("The AI couldn't organize one section of the PDF. Try again or use a smaller PDF.");
+ return map;
+}
+async function createAIMindMap(source,title="Your AI mind map"){
+ const clean=String(source||"").trim();if(!clean){alert("Add notes or upload a PDF first.");return;}
+ const chunks=splitIntoChunks(clean),btn=$("importTextBtn"),status=$("aiStatus");
+ btn.disabled=true;btn.textContent="Gemini is creating…";
+ try{
+  const combined=makeMap(title||"Your AI mind map",title||"Your AI mind map");
+  combined.nodes[combined.root].children=[];
+  for(let i=0;i<chunks.length;i++){
+   if(status)status.textContent=chunks.length>1?"Creating mind map · section "+(i+1)+" of "+chunks.length+"…":"Reading your material and building your mind map…";
+   const part=await requestMindMapOutline(chunks[i]),partRoot=part.nodes[part.root];
+   const branch=makeNode(partRoot.text||("Section "+(i+1)),combined.root);
+   combined.nodes[branch.id]=branch;combined.nodes[combined.root].children.push(branch.id);
+   for(const childId of partRoot.children){
+    const copyTree=(oldId,parentId)=>{
+     const old=part.nodes[oldId],copy=makeNode(old.text,parentId,old.definition||"");
+     combined.nodes[copy.id]=copy;combined.nodes[parentId].children.push(copy.id);
+     copy.collapsed=!!old.collapsed;
+     old.children.forEach(id=>copyTree(id,copy.id));
+    };
+    copyTree(childId,branch.id);
+   }
+  }
+  combined.title=title||combined.nodes[combined.root].text;
+  importMap(combined);
+ }catch(error){alert("Couldn't create the AI mind map: "+(error.message||"Please try again."));if(status)status.textContent="";}
+ finally{btn.disabled=false;btn.textContent="✧ Generate AI mind map";}
+}
 $("importTextBtn").onclick=e=>{e.preventDefault();createAIMindMap($("importText").value);};
 $("pdfNotesBtn").onclick=()=>{const dialog=$("importDialog");if(dialog&&!dialog.open)dialog.showModal();};
 $("pdfChooseBtn").onclick=()=>$("pdfFile").click();
@@ -192,7 +242,7 @@ async function readScannedPdf(pdfDoc){
  const Tesseract=await loadTesseract(),worker=await Tesseract.createWorker("eng",1,{logger:info=>{if(info.status==="recognizing text")$("aiStatus").textContent="Reading handwriting… "+Math.round((info.progress||0)*100)+"%";}});
  const parts=[];
  try{
-  for(let i=1;i<=Math.min(pdfDoc.numPages,8);i++){
+  for(let i=1;i<=pdfDoc.numPages;i++){
    $("aiStatus").textContent="Reading handwritten page "+i+" of "+Math.min(pdfDoc.numPages,8)+"…";
    const page=await pdfDoc.getPage(i),viewport=page.getViewport({scale:2}),canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");
    canvas.width=viewport.width;canvas.height=viewport.height;
@@ -211,7 +261,7 @@ $("pdfFile").onchange=async e=>{
   if(!window.pdfjsLib)throw new Error("PDF reader couldn't load. Refresh the page and try again.");
   pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   const pdfDoc=await pdfjsLib.getDocument(await file.arrayBuffer()).promise,parts=[];
-  for(let i=1;i<=Math.min(pdfDoc.numPages,10);i++){
+  for(let i=1;i<=pdfDoc.numPages;i++){
    status.textContent="Extracting text from page "+i+"…";
    const page=await pdfDoc.getPage(i),content=await page.getTextContent(),txt=content.items.map(x=>x.str).join(" ").trim();
    if(txt)parts.push(txt);
@@ -221,7 +271,7 @@ $("pdfFile").onchange=async e=>{
    status.textContent="This looks like a scanned or handwritten PDF. Starting handwriting recognition…";
    source=await readScannedPdf(pdfDoc);
   }
-  source=source.slice(0,3800);
+  
   if(!source||source.length<10)throw new Error("I couldn't recognize enough writing in this PDF. Try a clearer, well-lit scan with darker handwriting.");
   $("importText").value=source;
   status.textContent="PDF text extracted. Creating your AI mind map…";
