@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 (() => {
@@ -22,8 +22,8 @@ const googleProvider = new GoogleAuthProvider();
 document.addEventListener("click",async event=>{
  const button=event.target.closest("#googleSignInBtn");
  if(!button)return;
- try{button.disabled=true;sessionStorage.setItem("memoryGoogleRedirectPendingV1","1");const status=document.getElementById("cloudStatus");if(status)status.textContent="Opening Google sign-in…";await signInWithRedirect(auth,googleProvider);}
- catch(error){sessionStorage.removeItem("memoryGoogleRedirectPendingV1");const status=document.getElementById("cloudStatus");if(status)status.textContent="Sign-in failed · "+(error.code||error.message||"please try again");alert("Google sign-in failed: "+(error.code||error.message||"Please try again."));}
+ try{button.disabled=true;const status=document.getElementById("cloudStatus");if(status)status.textContent="Opening Google sign-in…";const result=await signInWithPopup(auth,googleProvider);cloudUser=result.user;updateAccountUI(result.user);setCloudStatus("Google connected · loading your maps…");await syncCloud();}
+ catch(error){const status=document.getElementById("cloudStatus");if(status)status.textContent="Google sign-in error · "+(error.code||error.message||"please try again");console.error("Google sign-in failed:",error);alert("Google sign-in failed: "+(error.code||error.message||"Please try again."));}
  finally{button.disabled=false;}
 });
 let cloudUser = null, cloudBusy = false, cloudTimer = null;
@@ -191,8 +191,6 @@ $("pdfFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(!w
 
 
 $("signOutBtn").onclick=async()=>{try{await signOut(auth);}catch(error){alert("Couldn't sign out: "+(error.message||"Please try again."));}};
-const redirectWasPending=sessionStorage.getItem("memoryGoogleRedirectPendingV1")==="1";
-const redirectCheck=getRedirectResult(auth).then(result=>{if(result?.user){sessionStorage.removeItem("memoryGoogleRedirectPendingV1");cloudUser=result.user;updateAccountUI(result.user);setCloudStatus("Google connected · loading your maps…");}else if(redirectWasPending){sessionStorage.removeItem("memoryGoogleRedirectPendingV1");setCloudStatus("Google returned without signing in · check browser cookies or Firebase redirect settings");}return result;}).catch(error=>{sessionStorage.removeItem("memoryGoogleRedirectPendingV1");console.error("Google redirect sign-in failed:",error);return {error};});
-onAuthStateChanged(auth,async user=>{cloudUser=user;if(user){updateAccountUI(user);await syncCloud();}else{updateAccountUI(null);const result=await redirectCheck;if(result?.error)setCloudStatus("Google sign-in error · "+(result.error.code||result.error.message||"please try again"));}});
+onAuthStateChanged(auth,async user=>{cloudUser=user;updateAccountUI(user);if(user){await syncCloud();}});
 load();renderLists();dashboard();
 })();
