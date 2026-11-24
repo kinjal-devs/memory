@@ -306,25 +306,12 @@ let studySlides=[],studyIndex=0,studyRootId=null,studyEditing=false;
 function startStudyMode(topicId=selectedId){
  const m=current();if(!m)return;const root=get(topicId)||get(selectedId)||get(m.root);if(!root)return;
  studyRootId=root.id;
- const descendants=[];
- function collect(id){const node=m.nodes[id];if(!node)return;descendants.push(node);node.children.forEach(collect);}
- root.children.forEach(collect);
- const kind=node=>{const label=String(node.text||"").trim().toLowerCase();if(/^syntax\b/.test(label))return "Syntax";if(/^code\b/.test(label))return "Code";if(/^example\b/.test(label))return "Example";return "";};
- const contentFor=node=>{
-  const parts=[];if(node.definition)parts.push(node.definition);
-  const addChildren=id=>{const parent=m.nodes[id];if(!parent)return;parent.children.forEach(childId=>{const child=m.nodes[childId];if(!child)return;parts.push(child.text+(child.definition?"\n"+child.definition:""));addChildren(childId);});};
-  addChildren(node.id);return parts.join("\n\n").trim();
- };
- const insideProgrammingSection=node=>{let parent=node.parent;while(parent&&parent!==root.id){const ancestor=m.nodes[parent];if(!ancestor)break;if(kind(ancestor))return true;parent=ancestor.parent;}return false;};
- const theory=descendants.filter(node=>!kind(node)&&!insideProgrammingSection(node));
- const definitionParts=[];if(root.definition)definitionParts.push(root.definition);
- const sectionContent=label=>descendants.filter(node=>kind(node)===label).map(contentFor).filter(Boolean).join("\n\n");
  const saved=root.studyContent||{};
  const allSlides=[
-  {key:"definition",label:"Definition",content:saved.definition??(definitionParts.join("\n\n").trim())},
-  {key:"syntax",label:"Syntax",content:saved.syntax??sectionContent("Syntax")},
-  {key:"code",label:"Code",content:saved.code??sectionContent("Code")},
-  {key:"example",label:"Example",content:saved.example??sectionContent("Example")}
+  {key:"definition",label:"Definition",content:saved.definition??(root.definition||"")},
+  {key:"syntax",label:"Syntax",content:saved.syntax??""},
+  {key:"code",label:"Code",content:saved.code??""},
+  {key:"example",label:"Example",content:saved.example??""}
  ];
  studySlides=allSlides;
  studyIndex=0;studyEditing=!String(studySlides[0].content||"").trim();renderStudySlide();$("studyDialog").showModal();
