@@ -453,3 +453,23 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
     font-size:9px;
   }
 }
+
+
+/* Study presentation stays over the map instead of replacing its view */
+.study-dialog{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+.study-dialog::backdrop{
+  background:rgba(7,9,18,.34) !important;
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
+}
+.study-slide{
+  background:rgba(25,31,47,.94) !important;
+  border:1px solid rgba(150,158,190,.25) !important;
+  box-shadow:0 14px 42px rgba(0,0,0,.38) !important;
+}
