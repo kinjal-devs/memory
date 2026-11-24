@@ -26,6 +26,7 @@ $("nodeCount").textContent=Object.keys(m.nodes).length+" topics";$("mapTitle").v
 let longPressTimer=null,longPressPointer=null;
 function closeMoveMenu(){const menu=$("moveContextMenu");if(menu)menu.remove();}
 document.addEventListener("pointerdown",e=>{const menu=$("moveContextMenu");if(menu&&!menu.contains(e.target))closeMoveMenu();},true);
+document.addEventListener("click",e=>{const menu=$("moveContextMenu");if(menu&&!menu.contains(e.target))closeMoveMenu();},true);
 function showMoveMenu(id,x,y){selectedId=id;closeMoveMenu();const menu=document.createElement("div");menu.id="moveContextMenu";menu.className="move-context-menu";const btn=document.createElement("button");btn.type="button";btn.textContent="↕  Move topic";btn.onclick=()=>{moveMode=true;closeMoveMenu();render();};menu.appendChild(btn);document.body.appendChild(menu);menu.style.left=Math.max(8,Math.min(x,window.innerWidth-155))+"px";menu.style.top=Math.max(8,Math.min(y,window.innerHeight-55))+"px";}
 function beginDrag(e,id,el){
  if(e.button!==0)return;
