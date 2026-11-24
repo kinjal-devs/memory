@@ -4,31 +4,6 @@ import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc } from "https
 
 (() => {
 const $ = id => document.getElementById(id);
-document.addEventListener("click",event=>{
- const menuButton=event.target.closest("#mobileMenu");
- if(menuButton){
-  const sidebar=document.getElementById("sidebar");
-  if(!sidebar)return;
-  const isOpen=sidebar.classList.toggle("open");
-  menuButton.setAttribute("aria-expanded",String(isOpen));
-  menuButton.setAttribute("aria-label",isOpen?"Close navigation menu":"Open navigation menu");
-  return;
- }
- if(event.target.closest("#mapList,#workspaceBtn,#templatesBtn,#newMapBtn")){
-  const sidebar=document.getElementById("sidebar"),button=document.getElementById("mobileMenu");
-  sidebar?.classList.remove("open");
-  button?.setAttribute("aria-expanded","false");
-  button?.setAttribute("aria-label","Open navigation menu");
- }
-});
-document.addEventListener("keydown",event=>{
- if(event.key==="Escape"){
-  document.getElementById("sidebar")?.classList.remove("open");
-  const button=document.getElementById("mobileMenu");
-  button?.setAttribute("aria-expanded","false");
-  button?.setAttribute("aria-label","Open navigation menu");
- }
-});
 const KEY = "memoryMindMapsV1";
 const DELETED_KEY = "memoryDeletedMapIdsV1";
 const firebaseConfig = {
