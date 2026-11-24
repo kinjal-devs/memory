@@ -220,3 +220,32 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
  .breadcrumbs span,.breadcrumbs b{display:none}
  .top-actions #shareBtn{max-width:70px}
 }
+
+/* Map-first layout: give the canvas the screen, keep tools compact */
+@media(max-width:850px){
+ .editor{height:calc(100dvh - 58px);height:calc(100svh - 58px);min-height:0}
+ .editor-heading{flex:0 0 auto;padding:7px 10px 6px;gap:6px;display:flex;flex-direction:column;align-items:stretch}
+ .editor-heading>div:first-child{display:flex;align-items:center;min-width:0}
+ .editor-heading p{display:none}
+ .map-title-input{font-size:15px;line-height:1.25;width:100%;min-width:0}
+ .editor-tools{display:flex;width:100%;flex-wrap:nowrap;gap:6px;overflow-x:auto;overflow-y:hidden;max-height:none;padding:2px 1px 5px;scrollbar-width:thin;overscroll-behavior-x:contain}
+ .editor-tools .tool-btn{flex:0 0 auto;min-height:34px;padding:6px 9px;font-size:10px;white-space:nowrap}
+ .canvas-wrap{flex:1 1 auto;min-height:0}
+ .bottom-toolbar{flex:0 0 auto;min-height:34px;height:34px;padding:3px 8px;gap:5px;flex-wrap:nowrap;overflow:hidden}
+ .bottom-toolbar>span:nth-child(2){display:none}
+ .bottom-toolbar>div{margin-left:auto;flex-wrap:nowrap}
+ .bottom-toolbar button{font-size:9px;padding:4px;margin:0 0 0 5px;white-space:nowrap}
+}
+@media(max-width:520px){
+ .editor{height:calc(100dvh - 56px);height:calc(100svh - 56px)}
+ .editor-heading{padding:5px 8px 4px;gap:3px}
+ .map-title-input{font-size:14px}
+ .editor-tools{gap:5px;padding-bottom:3px}
+ .editor-tools .tool-btn{min-height:31px;padding:5px 8px;font-size:9px}
+ .canvas-wrap{min-height:0}
+ .bottom-toolbar{min-height:30px;height:30px;padding:2px 7px}
+ .bottom-toolbar>span:first-child{font-size:9px}
+ .bottom-toolbar button{font-size:8px}
+ .zoom-controls{bottom:7px;left:7px}
+ .center-view{bottom:7px;right:7px}
+}
