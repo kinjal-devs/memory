@@ -301,7 +301,7 @@ $("signOutBtn").onclick=async()=>{try{await signOut(auth);}catch(error){alert("C
 onAuthStateChanged(auth,async user=>{cloudUser=user;updateAccountUI(user);if(user){await syncCloud();}});
 
 // Swipeable, editable review slides. Each slide's notes are saved on the topic.
-let studySlides=[],studyIndex=0,studyRootId=null;
+let studySlides=[],studyIndex=0,studyRootId=null,studyEditing=false;
 function startStudyMode(topicId=selectedId){
  const m=current();if(!m)return;const root=get(topicId)||get(selectedId)||get(m.root);if(!root)return;
  studyRootId=root.id;
@@ -328,7 +328,7 @@ function startStudyMode(topicId=selectedId){
  ];
  studySlides=allSlides.filter(slide=>String(slide.content||"").trim().length>0);
  if(!studySlides.length)studySlides=[allSlides[0]];
- studyIndex=0;$("studyTopicTitle").textContent=root.text;renderStudySlide();$("studyDialog").showModal();
+ studyIndex=0;studyEditing=false;$("studyTopicTitle").textContent=root.text;renderStudySlide();$("studyDialog").showModal();
 }
 function persistStudySlide(){
  const root=get(studyRootId),slide=studySlides[studyIndex];if(!root||!slide)return;
@@ -340,8 +340,14 @@ function persistStudySlide(){
 }
 function renderStudySlide(){
  const slide=studySlides[studyIndex];if(!slide)return;
- $("studySlideLabel").textContent=slide.label.toUpperCase();$("studySlideEditor").value=slide.content||"";
+ $("studySlideLabel").textContent=slide.label.toUpperCase();
+ $("studySlideContent").textContent=slide.content||"";
+ $("studySlideEditor").value=slide.content||"";
  $("studySlideEditor").placeholder="Add your "+slide.label.toLowerCase()+" notes here…";
+ $("studySlideContent").hidden=studyEditing;
+ $("studySlideEditor").hidden=!studyEditing;
+ $("studySlideActions").hidden=!studyEditing;
+ $("studyEditBtn").textContent=studyEditing?"✎ Editing":"✎ Edit";
  $("studySlide").classList.toggle("study-code",slide.label==="Code");
  $("studyCounter").textContent=(studyIndex+1)+" / "+studySlides.length;
  $("studyProgressFill").style.width=((studyIndex+1)/studySlides.length*100)+"%";
@@ -354,22 +360,23 @@ function renderStudySlide(){
  const addBtn=$("studyAddSlideBtn");
  if(addBtn){addBtn.hidden=!nextEmpty;addBtn.textContent=nextEmpty?"＋ Add "+({definition:"Definition",syntax:"Syntax",code:"Code",example:"Example"}[nextEmpty]):"All slides added";}
 }
-function moveStudySlide(direction){persistStudySlide();const next=studyIndex+direction;if(next<0||next>=studySlides.length)return;studyIndex=next;renderStudySlide();}
-$("studySaveSlideBtn").onclick=persistStudySlide;
+function moveStudySlide(direction){if(studyEditing){persistStudySlide();studyEditing=false;}const next=studyIndex+direction;if(next<0||next>=studySlides.length)return;studyIndex=next;renderStudySlide();}
+$("studyEditBtn").onclick=()=>{if(studyEditing){persistStudySlide();studyEditing=false;renderStudySlide();}else{studyEditing=true;renderStudySlide();$("studySlideEditor").focus();}};
+$("studySaveSlideBtn").onclick=()=>{persistStudySlide();studyEditing=false;renderStudySlide();};
 $("studyAddSlideBtn").onclick=()=>{
  const labels={definition:"Definition",syntax:"Syntax",code:"Code",example:"Example"};
  const key=["definition","syntax","code","example"].find(k=>!studySlides.some(slide=>slide.key===k));
  if(!key)return;
  studySlides.push({key,label:labels[key],content:""});
- studyIndex=studySlides.length-1;renderStudySlide();$("studySlideEditor").focus();
+ studyIndex=studySlides.length-1;studyEditing=true;renderStudySlide();$("studySlideEditor").focus();
 };
-$("closeStudyBtn").onclick=()=>{persistStudySlide();$("studyDialog").close();};
+$("closeStudyBtn").onclick=()=>{persistStudySlide();studyEditing=false;$("studyDialog").close();};
 $("studyPrevBtn").onclick=()=>moveStudySlide(-1);
-$("studyNextBtn").onclick=()=>{persistStudySlide();if(studyIndex===studySlides.length-1)$("studyDialog").close();else{studyIndex++;renderStudySlide();}};
+$("studyNextBtn").onclick=()=>{if(studyEditing){persistStudySlide();studyEditing=false;}if(studyIndex===studySlides.length-1)$("studyDialog").close();else{studyIndex++;renderStudySlide();}};
 let studyTouchX=0;
 $("studySlide").addEventListener("touchstart",e=>{studyTouchX=e.changedTouches[0].clientX;},{passive:true});
 $("studySlide").addEventListener("touchend",e=>{const delta=e.changedTouches[0].clientX-studyTouchX;if(Math.abs(delta)>45)moveStudySlide(delta<0?1:-1);},{passive:true});
-$("studyDialog").addEventListener("keydown",e=>{if(e.key==="ArrowRight")moveStudySlide(1);if(e.key==="ArrowLeft")moveStudySlide(-1);});
+$("studyDialog").addEventListener("keydown",e=>{if(e.target.matches("textarea,input"))return;if(e.key==="ArrowRight")moveStudySlide(1);if(e.key==="ArrowLeft")moveStudySlide(-1);});
 $("studyDialog").addEventListener("click",e=>{if(e.target=== $("studyDialog"))persistStudySlide();});
 
 load();renderLists();dashboard();
