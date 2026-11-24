@@ -318,7 +318,6 @@ function startStudyMode(topicId=selectedId){
  const insideProgrammingSection=node=>{let parent=node.parent;while(parent&&parent!==root.id){const ancestor=m.nodes[parent];if(!ancestor)break;if(kind(ancestor))return true;parent=ancestor.parent;}return false;};
  const theory=descendants.filter(node=>!kind(node)&&!insideProgrammingSection(node));
  const definitionParts=[];if(root.definition)definitionParts.push(root.definition);
- theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\n"+node.definition:""));});
  const sectionContent=label=>descendants.filter(node=>kind(node)===label).map(contentFor).filter(Boolean).join("\n\n");
  const saved=root.studyContent||{};
  const allSlides=[
