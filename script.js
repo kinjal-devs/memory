@@ -314,7 +314,8 @@ function startStudyMode(topicId=selectedId){
   {key:"example",label:"Example",content:saved.example??""}
  ];
  studySlides=allSlides;
- studyIndex=0;studyEditing=!String(studySlides[0].content||"").trim();renderStudySlide();$("studyDialog").showModal();
+ const firstFilled=studySlides.findIndex(slide=>String(slide.content||"").trim());
+ studyIndex=firstFilled>=0?firstFilled:0;studyEditing=firstFilled<0;renderStudySlide();$("studyDialog").showModal();
 }
 function persistStudySlide(){
  const root=get(studyRootId),slide=studySlides[studyIndex];if(!root||!slide)return;
