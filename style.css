@@ -261,3 +261,15 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
  .editor-tools.menu-open{display:grid;}
  .editor-tools .tool-btn{width:100%;min-height:38px;padding:8px 7px;font-size:10px;white-space:normal;}
 }
+
+
+/* Editable note fields inside each swipe-review slide */
+.study-slide{display:flex;flex-direction:column;gap:12px}
+.study-slide-editor{display:block;width:100%;min-height:190px;max-height:42vh;resize:vertical;box-sizing:border-box;padding:14px;border:1px solid #454b63;border-radius:10px;background:#111724;color:#edf0f8;font:14px/1.75 'DM Sans',sans-serif;outline:none}
+.study-slide-editor:focus{border-color:#a99aff;box-shadow:0 0 0 2px #a99aff25}
+.study-slide-editor::placeholder{color:#7f899f}
+.study-slide-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.study-slide-actions span{font-size:10px;color:#929bb1}
+.study-slide-actions button{min-height:38px;padding:8px 14px}
+.study-dialog .study-slide-label{margin:0}
+@media(max-width:520px){.study-slide-editor{min-height:170px;max-height:40vh;font-size:16px;padding:12px}.study-slide-actions{gap:7px}.study-slide-actions span{flex:1;min-width:120px}}
