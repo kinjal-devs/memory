@@ -1,0 +1,13 @@
+{
+  "appId": "com.kinjal.memory",
+  "appName": "Memory",
+  "webDir": "www",
+  "server": {
+    "url": "https://kinjal-devs.github.io/memory/",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
