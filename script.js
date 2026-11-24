@@ -29,6 +29,7 @@ function openMap(id){activeId=id;selectedId=current().root;zoom=1;panX=25;panY=2
 function createMap(title="Untitled map",root="Your big idea"){const m=makeMap(title,root);maps.unshift(m);activeId=m.id;selectedId=m.root;zoom=1;panX=25;panY=20;save();editor();}
 function openDialog(which,id){mode=which;target=id;$("nodeDialogTitle").textContent=which==="rename"?"Rename topic":which==="child"?"Add a branch":"Add a topic";$("nodeText").value=which==="rename"?get(id).text:"";$("nodeDialog").showModal();setTimeout(()=>$("nodeText").focus(),50);}
 $("nodeForm").addEventListener("submit",e=>{if(e.submitter?.value==="cancel")return;e.preventDefault();const value=$("nodeText").value.trim();if(!value)return;if(mode==="rename")get(target).text=value;else{const parentId=mode==="child"?target:current().root,p=get(parentId),n=makeNode(value,parentId);current().nodes[n.id]=n;p.children.push(n.id);p.collapsed=false;selectedId=n.id;}$("nodeDialog").close();render();save();});
+$("nodeText").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("nodeForm").requestSubmit($("nodeSaveBtn"));}});
 function deleteSelected(){const m=current(),n=get(selectedId);if(!n)return;if(n.id===m.root){if(!confirm("Delete this whole mind map?"))return;maps=maps.filter(x=>x.id!==m.id);if(!maps.length){const fresh=makeMap();maps=[fresh];activeId=fresh.id;}else activeId=maps[0].id;selectedId=current().root;dashboard();save();return;}if(!confirm("Delete this topic and all its branches?"))return;get(n.parent).children=get(n.parent).children.filter(x=>x!==n.id);[n.id,...allDesc(n.id)].forEach(id=>delete m.nodes[id]);selectedId=n.parent;render();save();}
 $("newMapBtn").onclick=$("dashboardNewBtn").onclick=$("startBlankBtn").onclick=()=>createMap();
 $("workspaceBtn").onclick=dashboard;$("templatesBtn").onclick=()=>{dashboard();document.querySelector(".quick-ideas").scrollIntoView({behavior:"smooth"});};
@@ -38,9 +39,21 @@ $("zoomIn").onclick=()=>{zoom=Math.min(1.8,zoom+.1);transform();};$("zoomOut").o
 function fit(){zoom=1;panX=25;panY=20;transform();}$("fitBtn").onclick=$("centerBtn").onclick=fit;
 $("collapseBtn").onclick=()=>{Object.values(current().nodes).forEach(n=>{if(n.children.length)n.collapsed=true;});current().nodes[current().root].collapsed=false;render();save();};
 $("expandBtn").onclick=()=>{Object.values(current().nodes).forEach(n=>n.collapsed=false);render();save();};
-$("canvasWrap").addEventListener("pointerdown",e=>{if(e.target.closest(".node,.zoom-controls,.center-view"))return;panning={x:e.clientX-panX,y:e.clientY-panY};$("canvasWrap").setPointerCapture(e.pointerId);});
-$("canvasWrap").addEventListener("pointermove",e=>{if(!panning)return;panX=e.clientX-panning.x;panY=e.clientY-panning.y;transform();});
-$("canvasWrap").addEventListener("pointerup",()=>panning=null);$("canvasWrap").addEventListener("pointercancel",()=>panning=null);
+const activePointers=new Map();let pinchStart=null;
+const pointerDistance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+$("canvasWrap").addEventListener("pointerdown",e=>{
+ if(e.target.closest(".node,.zoom-controls,.center-view"))return;
+ activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});$("canvasWrap").setPointerCapture(e.pointerId);
+ if(activePointers.size===2){const pts=[...activePointers.values()];pinchStart={distance:pointerDistance(pts[0],pts[1]),zoom,midX:(pts[0].x+pts[1].x)/2,midY:(pts[0].y+pts[1].y)/2,panX,panY};panning=null;}
+ else if(activePointers.size===1){panning={x:e.clientX-panX,y:e.clientY-panY};$("canvasWrap").classList.add("is-panning");}
+});
+$("canvasWrap").addEventListener("pointermove",e=>{
+ if(!activePointers.has(e.pointerId))return;activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(activePointers.size>=2&&pinchStart){const pts=[...activePointers.values()],midX=(pts[0].x+pts[1].x)/2,midY=(pts[0].y+pts[1].y)/2;zoom=Math.max(.35,Math.min(1.8,pinchStart.zoom*pointerDistance(pts[0],pts[1])/Math.max(1,pinchStart.distance)));panX=pinchStart.panX+(midX-pinchStart.midX);panY=pinchStart.panY+(midY-pinchStart.midY);transform();}
+ else if(panning){panX=e.clientX-panning.x;panY=e.clientY-panning.y;transform();}
+});
+function endCanvasPointer(e){activePointers.delete(e.pointerId);if(activePointers.size<2)pinchStart=null;if(activePointers.size===1){const p=[...activePointers.values()][0];panning={x:p.x-panX,y:p.y-panY};}else panning=null;if(!activePointers.size)$("canvasWrap").classList.remove("is-panning");}
+$("canvasWrap").addEventListener("pointerup",endCanvasPointer);$("canvasWrap").addEventListener("pointercancel",endCanvasPointer);
 $("canvasWrap").addEventListener("wheel",e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();zoom=Math.max(.35,Math.min(1.8,zoom+(e.deltaY<0?.05:-.05)));transform();}},{passive:false});
 function download(name,data,type="application/json"){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function exportMap(){const m=current();download((m.title||"mind-map").toLowerCase().replace(/[^a-z0-9]+/g,"-")+".json",JSON.stringify(m,null,2));}
