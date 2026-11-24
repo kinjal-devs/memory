@@ -327,9 +327,8 @@ function startStudyMode(topicId=selectedId){
   {key:"code",label:"Code",content:saved.code??sectionContent("Code")},
   {key:"example",label:"Example",content:saved.example??sectionContent("Example")}
  ];
- studySlides=allSlides.filter(slide=>String(slide.content||"").trim().length>0);
- if(!studySlides.length)studySlides=[allSlides[0]];
- studyIndex=0;studyEditing=false;renderStudySlide();$("studyDialog").showModal();
+ studySlides=allSlides;
+ studyIndex=0;studyEditing=!String(studySlides[0].content||"").trim();renderStudySlide();$("studyDialog").showModal();
 }
 function persistStudySlide(){
  const root=get(studyRootId),slide=studySlides[studyIndex];if(!root||!slide)return;
@@ -349,16 +348,12 @@ function renderStudySlide(){
  $("studySlide").classList.toggle("study-code",slide.label==="Code");
  $("studyPrevBtn").disabled=studyIndex===0;
  $("studyNextBtn").textContent=studyIndex===studySlides.length-1?"Done":"Next";
- $("studyAddSlideBtn").hidden=studySlides.some(item=>item.key==="syntax");
+ $("studySectionSelect").value=slide.key;
 }
 function moveStudySlide(direction){if(studyEditing){persistStudySlide();studyEditing=false;}const next=studyIndex+direction;if(next<0||next>=studySlides.length)return;studyIndex=next;renderStudySlide();}
 $("studySlideContent").onclick=()=>{if(studyEditing)return;studyEditing=true;renderStudySlide();$("studySlideEditor").focus();};
 $("studySaveSlideBtn").onclick=()=>{if(studyEditing)persistStudySlide();studyEditing=false;renderStudySlide();};
-$("studyAddSlideBtn").onclick=()=>{
- if(studySlides.some(slide=>slide.key==="syntax"))return;
- studySlides.push({key:"syntax",label:"Syntax",content:""});
- studyIndex=studySlides.length-1;studyEditing=true;renderStudySlide();$("studySlideEditor").focus();
-};
+$("studySectionSelect").onchange=()=>{if(studyEditing)persistStudySlide();const key=$("studySectionSelect").value;studyIndex=studySlides.findIndex(slide=>slide.key===key);if(studyIndex<0)return;studyEditing=!String(studySlides[studyIndex].content||"").trim();renderStudySlide();if(studyEditing)$("studySlideEditor").focus();};
 $("studyPrevBtn").onclick=()=>moveStudySlide(-1);
 $("studyNextBtn").onclick=()=>{if(studyEditing){persistStudySlide();studyEditing=false;}if(studyIndex===studySlides.length-1)$("studyDialog").close();else{studyIndex++;renderStudySlide();}};
 let studyTouchX=0;
