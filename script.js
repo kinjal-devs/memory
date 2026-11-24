@@ -51,12 +51,12 @@ $("canvasWrap").addEventListener("pointerdown",e=>{
 });
 $("canvasWrap").addEventListener("pointermove",e=>{
  if(!activePointers.has(e.pointerId))return;activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(activePointers.size>=2&&pinchStart){const pts=[...activePointers.values()],midX=(pts[0].x+pts[1].x)/2,midY=(pts[0].y+pts[1].y)/2;zoom=Math.max(.35,Math.min(1.8,pinchStart.zoom*pointerDistance(pts[0],pts[1])/Math.max(1,pinchStart.distance)));panX=pinchStart.panX+(midX-pinchStart.midX);panY=pinchStart.panY+(midY-pinchStart.midY);transform();}
+ if(activePointers.size>=2&&pinchStart){const pts=[...activePointers.values()],midX=(pts[0].x+pts[1].x)/2,midY=(pts[0].y+pts[1].y)/2,ratio=pointerDistance(pts[0],pts[1])/Math.max(1,pinchStart.distance);zoom=Math.max(.2,Math.min(3.5,pinchStart.zoom*Math.pow(ratio,.72)));const rect=$("canvasWrap").getBoundingClientRect(),startX=pinchStart.midX-rect.left,startY=pinchStart.midY-rect.top,worldX=(startX-pinchStart.panX)/pinchStart.zoom,worldY=(startY-pinchStart.panY)/pinchStart.zoom;panX=(midX-rect.left)-worldX*zoom;panY=(midY-rect.top)-worldY*zoom;transform();}
  else if(panning){panX=e.clientX-panning.x;panY=e.clientY-panning.y;transform();}
 });
 function endCanvasPointer(e){activePointers.delete(e.pointerId);if(activePointers.size<2)pinchStart=null;if(activePointers.size===1){const p=[...activePointers.values()][0];panning={x:p.x-panX,y:p.y-panY};}else panning=null;if(!activePointers.size)$("canvasWrap").classList.remove("is-panning");}
 $("canvasWrap").addEventListener("pointerup",endCanvasPointer);$("canvasWrap").addEventListener("pointercancel",endCanvasPointer);
-$("canvasWrap").addEventListener("wheel",e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();zoomAt(zoom*(e.deltaY<0?1.1:1/1.1),e.clientX,e.clientY);}},{passive:false});
+$("canvasWrap").addEventListener("wheel",e=>{e.preventDefault();const unit=e.deltaMode===1?16:e.deltaMode===2?$("canvasWrap").clientHeight:1,delta=e.deltaY*unit,factor=Math.exp(-delta*.0015);zoomAt(zoom*factor,e.clientX,e.clientY);},{passive:false});
 function download(name,data,type="application/json"){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function exportMap(){const m=current();download((m.title||"mind-map").toLowerCase().replace(/[^a-z0-9]+/g,"-")+".json",JSON.stringify(m,null,2));}
 $("exportBtn").onclick=exportMap;$("shareBtn").onclick=()=>{exportMap();$("saveStatus").textContent="● JSON backup downloaded";};
