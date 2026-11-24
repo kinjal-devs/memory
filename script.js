@@ -37,7 +37,7 @@ $("newMapBtn").onclick=$("dashboardNewBtn").onclick=$("startBlankBtn").onclick=(
 $("workspaceBtn").onclick=dashboard;$("templatesBtn").onclick=()=>{dashboard();document.querySelector(".quick-ideas").scrollIntoView({behavior:"smooth"});};
 $("mapTitle").onchange=e=>{current().title=e.target.value.trim()||"Untitled map";render();save();};
 $("addNodeBtn").onclick=()=>openDialog("add",selectedId);$("addChildBtn").onclick=()=>openDialog("child",selectedId||current().root);$("renameBtn").onclick=()=>selectedId&&openDialog("rename",selectedId);$("deleteBtn").onclick=deleteSelected;
-$("zoomIn").onclick=()=>zoomFromCenter(1.2);$("zoomOut").onclick=()=>zoomFromCenter(1/1.2);
+$("zoomIn").onclick=()=>zoomFromCenter(1.05);$("zoomOut").onclick=()=>zoomFromCenter(1/1.05);
 function fit(){zoom=1;panX=25;panY=20;transform();}$("fitBtn").onclick=$("centerBtn").onclick=fit;
 $("collapseBtn").onclick=()=>{Object.values(current().nodes).forEach(n=>{if(n.children.length)n.collapsed=true;});current().nodes[current().root].collapsed=false;render();save();};
 $("expandBtn").onclick=()=>{Object.values(current().nodes).forEach(n=>n.collapsed=false);render();save();};
