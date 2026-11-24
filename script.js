@@ -51,10 +51,12 @@ async function syncCloud(){
   const deleted=JSON.parse(localStorage.getItem(DELETED_KEY)||"[]");
   for(const id of deleted){await deleteDoc(doc(db,"users",userId,"maps",id));}
   const snap=await getDocs(mapsRef);
+  const remoteById=new Map();
   const merged=new Map();
   if(hadLocalMaps){maps.forEach(m=>{if(m&&m.id&&m.nodes&&m.root)merged.set(m.id,m);});}
   snap.forEach(item=>{
    const remote=item.data();if(!remote||!remote.id||!remote.nodes||!remote.root||deleted.includes(item.id))return;
+   remoteById.set(remote.id,remote);
    const local=merged.get(remote.id);
    if(!local||(Number(remote.updated)||0)>(Number(local.updated)||0))merged.set(remote.id,remote);
   });
@@ -63,7 +65,7 @@ async function syncCloud(){
   if(!maps.some(m=>m.id===activeId))activeId=maps[0].id;
   if(!current())activeId=maps[0].id;
   selectedId=current().root;
-  for(const m of maps){await setDoc(doc(db,"users",userId,"maps",m.id),m);}
+  for(const m of maps){const remote=remoteById.get(m.id);if(!remote||(Number(m.updated)||0)>(Number(remote.updated)||0))await setDoc(doc(db,"users",userId,"maps",m.id),m);}
   localStorage.setItem(KEY,JSON.stringify({maps,activeId}));
   localStorage.removeItem(DELETED_KEY);hadLocalMaps=true;
   renderLists();if(!$("editor").hidden)render();
