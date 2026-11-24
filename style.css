@@ -708,17 +708,16 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
 .node-text{display:block;min-width:0;overflow:visible;white-space:normal;overflow-wrap:anywhere;word-break:normal;line-height:1.3;}
 
 
-/* Built-in editable points table for Study Mode. */
-.study-table-editor{display:flex;flex-direction:column;gap:10px;min-width:0}
-.study-table-actions{display:flex;gap:8px;justify-content:flex-end}
-.study-table-actions button{min-height:30px;padding:5px 10px;border:1px solid #505873;border-radius:7px;background:#293149;color:#e8eaf4;font-size:11px}
-.study-table-scroll{max-width:100%;overflow:auto;border:1px solid #414963;border-radius:9px}
-#studyPointsTable{width:100%;min-width:300px;border-collapse:collapse;table-layout:fixed}
-#studyPointsTable th,#studyPointsTable td{border:1px solid #414963;padding:5px;vertical-align:top}
-#studyPointsTable th{background:#293149}
-#studyPointsTable input,#studyPointsTable textarea{display:block;width:100%;min-width:0;box-sizing:border-box;border:0;outline:0;background:transparent;color:#f0f2fa;font:12px/1.5 "DM Sans",sans-serif;padding:5px;resize:vertical}
-#studyPointsTable input{font-weight:700;color:#c9c1ff}
-#studyPointsTable textarea{min-height:66px}
-#studyPointsTable input::placeholder,#studyPointsTable textarea::placeholder{color:#7f89a2}
-.study-table-hint{margin:0;color:#8e98b0;font-size:10px;line-height:1.4}
+/* Minimal editable points table: plain cells with fine white guide lines. */
+.study-table-editor{display:flex;flex-direction:column;gap:6px;min-width:0}
+.study-table-actions{display:flex;justify-content:flex-end}
+.study-table-actions button{min-height:24px;padding:2px 5px;border:0;background:transparent;color:#dfe4ef;font-size:11px}
+.study-table-scroll{max-width:100%;overflow:auto;border:0;border-radius:0}
+#studyPointsTable{width:max-content;min-width:100%;border-collapse:collapse;table-layout:fixed}
+#studyPointsTable th,#studyPointsTable td{min-width:125px;border:1px solid rgba(255,255,255,.72);padding:2px;vertical-align:top;background:transparent}
+#studyPointsTable th{background:transparent}
+#studyPointsTable input,#studyPointsTable textarea{display:block;width:100%;min-width:0;box-sizing:border-box;border:0;outline:0;background:transparent;color:#fff;font:12px/1.5 "DM Sans",sans-serif;padding:6px;resize:vertical}
+#studyPointsTable input{font-weight:500;color:#fff}
+#studyPointsTable textarea{min-height:58px}
+#studyPointsTable input::placeholder,#studyPointsTable textarea::placeholder{color:rgba(255,255,255,.48)}
 .study-slide:has(.study-table-editor:not([hidden])){min-height:260px}
