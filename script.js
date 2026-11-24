@@ -298,7 +298,8 @@ function startStudyMode(){
   const addChildren=id=>{const parent=m.nodes[id];if(!parent)return;parent.children.forEach(childId=>{const child=m.nodes[childId];if(!child)return;parts.push(child.text+(child.definition?"\n"+child.definition:""));addChildren(childId);});};
   addChildren(node.id);return parts.join("\n\n").trim();
  };
- const theory=descendants.filter(node=>!kind(node));
+ const insideProgrammingSection=node=>{let parent=node.parent;while(parent&&parent!==root.id){const ancestor=m.nodes[parent];if(!ancestor)break;if(kind(ancestor))return true;parent=ancestor.parent;}return false;};
+ const theory=descendants.filter(node=>!kind(node)&&!insideProgrammingSection(node));
  const definitionParts=[];if(root.definition)definitionParts.push(root.definition);
  theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\n"+node.definition:""));});
  studySlides=[{label:"Definition",content:definitionParts.join("\n\n").trim()||"Add a definition using the ⓘ button on this topic. Theory notes from its branches will also appear here."}];
