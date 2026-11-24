@@ -28,7 +28,7 @@ document.addEventListener("click",async event=>{
 });
 let cloudUser = null, cloudBusy = false, cloudTimer = null;
 let hadLocalMaps = !!localStorage.getItem(KEY);
-let maps=[], activeId=null, selectedId=null, zoom=1, panX=0, panY=0, drag=null, panning=null, mode="add", target=null, moveMode=false;
+let currentView="dashboard";let maps=[], activeId=null, selectedId=null, zoom=1, panX=0, panY=0, drag=null, panning=null, mode="add", target=null, moveMode=false;
 const uid=()=>Math.random().toString(36).slice(2,10);
 const makeNode=(text,parent=null,definition="")=>({id:uid(),text,definition,parent,children:[],collapsed:false,x:0,y:0});
 function makeMap(title="Untitled map",rootText="Your big idea"){const r=makeNode(rootText);return{id:uid(),title,root:r.id,nodes:{[r.id]:r},updated:Date.now()};}
@@ -130,8 +130,11 @@ function beginDrag(e,id,el){
  el.onpointercancel=()=>{drag=null;render();};
 }
 function renderLists(){const list=$("mapList"),cards=$("mapCards");if(!list||!cards)return;list.innerHTML="";cards.innerHTML="";$("mapCount").textContent=maps.length;maps.slice().sort((a,b)=>b.updated-a.updated).forEach(m=>{const b=document.createElement("button");b.textContent="◌  "+m.title;b.className=m.id===activeId?"selected":"";b.onclick=()=>openMap(m.id);list.appendChild(b);const card=document.createElement("button");card.className="map-card";const icon=document.createElement("span");icon.className="card-icon";icon.textContent="✳";const info=document.createElement("span"),title=document.createElement("strong"),meta=document.createElement("small");title.textContent=m.title;meta.textContent=Object.keys(m.nodes).length+" topics · "+new Date(m.updated).toLocaleDateString();info.append(title,meta);card.append(icon,info);card.onclick=()=>openMap(m.id);cards.appendChild(card);});if(!maps.length)cards.innerHTML='<div class="empty-state">No maps yet. Create your first one.</div>';}
-function dashboard(){$("dashboard").hidden=false;$("editor").hidden=true;$("welcomeStrip").hidden=false;renderLists();}
-function editor(){ $("dashboard").hidden=true;$("welcomeStrip").hidden=true;$("editor").hidden=false;render();}
+function showView(view,push=true){if(view!==currentView&&push)history.pushState({memoryView:view},"",location.href);currentView=view;if(view==="dashboard"){$("dashboard").hidden=false;$("editor").hidden=true;$("welcomeStrip").hidden=false;renderLists();}else{$("dashboard").hidden=true;$("welcomeStrip").hidden=true;$("editor").hidden=false;render();}}
+function dashboard(push=true){showView("dashboard",push);}
+function editor(push=true){showView("editor",push);}
+history.replaceState({memoryView:"dashboard"},"",location.href);
+window.addEventListener("popstate",event=>{const view=event.state?.memoryView||"dashboard";showView(view,false);});
 function openMap(id){activeId=id;selectedId=current().root;zoom=1;panX=25;panY=20;editor();save();}
 function createMap(title="Untitled map",root="Your big idea"){const m=makeMap(title,root);maps.unshift(m);activeId=m.id;selectedId=m.root;zoom=1;panX=25;panY=20;save();editor();}
 let definitionTarget=null;
