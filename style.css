@@ -152,3 +152,71 @@
 .study-controls{display:flex;justify-content:space-between;gap:10px;margin-top:17px}.study-controls button{min-width:112px}.study-controls button:disabled{opacity:.35;cursor:not-allowed}
 .study-hint{text-align:center;color:#858da3;font-size:10px;margin:13px 0 0}
 @media(max-width:520px){.study-slide{min-height:230px;padding:17px}.study-slide-content{font-size:14px}.study-controls button{flex:1;min-width:0}}
+
+/* Mobile-first usability pass */
+html{min-height:100%;-webkit-text-size-adjust:100%}
+body{min-height:100dvh;overflow-x:hidden}
+button{min-height:36px;-webkit-tap-highlight-color:transparent}
+input,textarea{font-size:16px}
+.sidebar{padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.topbar{padding-top:env(safe-area-inset-top)}
+.canvas-wrap{overscroll-behavior:contain}
+.node{touch-action:none}
+dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
+@media(max-width:850px){
+ .app-shell{min-height:100dvh}
+ .sidebar{padding-top:max(22px,env(safe-area-inset-top));padding-bottom:max(18px,env(safe-area-inset-bottom))}
+ body:has(.sidebar.open)::before{content:"";position:fixed;inset:0;background:#05060bb8;z-index:19}
+ .sidebar.open{z-index:20}
+ .topbar{position:relative;z-index:21}
+ .editor{min-height:0}
+ .editor-heading{width:100%;min-width:0}
+ .editor-tools{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .editor-tools .tool-btn{min-width:0;min-height:40px;padding:8px 5px;white-space:normal;line-height:1.2;font-size:11px}
+ .map-title-input{width:min(100%,calc(100vw - 32px));max-width:100%}
+ .canvas-wrap{min-height:240px}
+ .bottom-toolbar{min-height:44px;height:auto;gap:7px;flex-wrap:wrap;padding:7px 10px}
+ .bottom-toolbar>div{display:flex;gap:5px;flex-wrap:wrap}
+ .bottom-toolbar button{padding:6px 5px;margin:0}
+ .study-dialog{max-height:calc(100dvh - 20px);width:calc(100vw - 20px);padding:16px}
+}
+@media(max-width:480px){
+ .topbar{height:56px;padding-left:8px;padding-right:8px;gap:7px}
+ .mobile-menu{width:38px;height:38px;flex-basis:38px}
+ .breadcrumbs{min-width:0;font-size:10px}
+ .top-actions{flex-shrink:0}
+ .top-actions .btn{min-height:34px;padding:7px 8px;font-size:10px}
+ .top-actions #shareBtn{max-width:86px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .welcome-strip{margin:10px;padding:16px}
+ .welcome-strip .btn{width:100%;justify-content:center}
+ .section-heading{align-items:flex-start;gap:10px}
+ .section-heading h2{font-size:18px}
+ .section-heading p{font-size:11px;line-height:1.5}
+ .section-heading>.btn{padding:8px;font-size:10px;white-space:nowrap}
+ .map-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .map-card{min-width:0;overflow:hidden}
+ .map-card-actions{justify-content:flex-start}
+ .editor{height:calc(100dvh - 56px);height:calc(100svh - 56px);min-height:0}
+ .editor-heading{padding:9px 10px 8px;gap:9px}
+ .editor-heading p{font-size:10px;line-height:1.35}
+ .editor-tools{grid-template-columns:repeat(2,minmax(0,1fr));max-height:132px;overflow-y:auto;overscroll-behavior:contain;padding:1px 1px 5px}
+ .editor-tools .tool-btn{min-height:38px;font-size:10px}
+ .canvas-wrap{flex:1;min-height:180px}
+ .bottom-toolbar{font-size:9px}
+ .bottom-toolbar>span:first-child{font-size:10px}
+ .zoom-controls button{min-width:38px;min-height:38px;padding:7px 9px}
+ .center-view{min-width:38px;min-height:38px;padding:6px 10px}
+ .dialog-actions{flex-wrap:wrap}
+ .dialog-actions>*{flex:1;min-width:110px}
+ #importDialog,#nodeDialog,#definitionDialog{padding:17px;width:calc(100vw - 20px)}
+ #importDialog .dialog-actions{gap:7px}
+ #importDialog .dialog-actions button{flex:1;min-width:0;padding:9px 7px;font-size:10px}
+ .study-slide{min-height:38vh;max-height:54dvh}
+ .study-controls{position:sticky;bottom:0;background:#171b29;padding-top:8px}
+}
+@media(max-width:350px){
+ .map-cards{grid-template-columns:1fr}
+ .editor-tools{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .breadcrumbs span,.breadcrumbs b{display:none}
+ .top-actions #shareBtn{max-width:70px}
+}
