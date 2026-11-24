@@ -123,3 +123,9 @@
 .choose-json-file:hover{transform:translateY(-2px);border-color:#b7aaff;box-shadow:inset 0 1px 0 #ffffff22,0 8px 22px #090b16a6;filter:brightness(1.12)}
 .choose-json-file:active{transform:scale(.98)}
 .choose-json-file:focus-within{outline:2px solid #b7aaff;outline-offset:3px}
+
+
+/* Keep the PDF upload and AI generate actions neatly aligned */
+#importDialog .dialog-actions{align-items:center;flex-wrap:wrap}
+#importDialog #pdfChooseBtn,
+#importDialog #importTextBtn{min-height:43px;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}
