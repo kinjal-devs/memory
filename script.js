@@ -300,52 +300,64 @@ $("pdfFile").onchange=async e=>{
 $("signOutBtn").onclick=async()=>{try{await signOut(auth);}catch(error){alert("Couldn't sign out: "+(error.message||"Please try again."));}};
 onAuthStateChanged(auth,async user=>{cloudUser=user;updateAccountUI(user);if(user){await syncCloud();}});
 
-// Swipeable Study Mode: definition first, then only the programming sections that exist.
-let studySlides=[],studyIndex=0;
+// Swipeable, editable review slides. Each slide's notes are saved on the topic.
+let studySlides=[],studyIndex=0,studyRootId=null;
 function startStudyMode(topicId=selectedId){
  const m=current();if(!m)return;const root=get(topicId)||get(selectedId)||get(m.root);if(!root)return;
+ studyRootId=root.id;
  const descendants=[];
  function collect(id){const node=m.nodes[id];if(!node)return;descendants.push(node);node.children.forEach(collect);}
  root.children.forEach(collect);
- const kind=node=>{const label=String(node.text||"").trim().toLowerCase();if(/^syntax\b/.test(label))return "Syntax";if(/^code\b/.test(label))return "Code";if(/^example\b/.test(label))return "Example";return "";};
+ const kind=node=>{const label=String(node.text||"").trim().toLowerCase();if(/^syntax\\b/.test(label))return "Syntax";if(/^code\\b/.test(label))return "Code";if(/^example\\b/.test(label))return "Example";return "";};
  const contentFor=node=>{
   const parts=[];if(node.definition)parts.push(node.definition);
-  const addChildren=id=>{const parent=m.nodes[id];if(!parent)return;parent.children.forEach(childId=>{const child=m.nodes[childId];if(!child)return;parts.push(child.text+(child.definition?"\n"+child.definition:""));addChildren(childId);});};
-  addChildren(node.id);return parts.join("\n\n").trim();
+  const addChildren=id=>{const parent=m.nodes[id];if(!parent)return;parent.children.forEach(childId=>{const child=m.nodes[childId];if(!child)return;parts.push(child.text+(child.definition?"\\n"+child.definition:""));addChildren(childId);});};
+  addChildren(node.id);return parts.join("\\n\\n").trim();
  };
  const insideProgrammingSection=node=>{let parent=node.parent;while(parent&&parent!==root.id){const ancestor=m.nodes[parent];if(!ancestor)break;if(kind(ancestor))return true;parent=ancestor.parent;}return false;};
  const theory=descendants.filter(node=>!kind(node)&&!insideProgrammingSection(node));
  const definitionParts=[];if(root.definition)definitionParts.push(root.definition);
- theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\n"+node.definition:""));});
- studySlides=[{label:"Definition",content:definitionParts.join("\n\n").trim()||"Add a definition using the ⓘ button on this topic. Theory notes from its branches will also appear here."}];
- const hasProgrammingSections=descendants.some(node=>kind(node));
- if(hasProgrammingSections){
-  ["Syntax","Code","Example"].forEach(label=>{
-   const matches=descendants.filter(node=>kind(node)===label);
-   const content=matches.map(contentFor).filter(Boolean).join("\n\n");
-   studySlides.push({label,content:content||("No "+label.toLowerCase()+" content has been added yet.")});
-  });
- }
+ theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\\n"+node.definition:""));});
+ const sectionContent=label=>descendants.filter(node=>kind(node)===label).map(contentFor).filter(Boolean).join("\\n\\n");
+ const saved=root.studyContent||{};
+ studySlides=[
+  {key:"definition",label:"Definition",content:saved.definition??(definitionParts.join("\\n\\n").trim())},
+  {key:"syntax",label:"Syntax",content:saved.syntax??sectionContent("Syntax")},
+  {key:"code",label:"Code",content:saved.code??sectionContent("Code")},
+  {key:"example",label:"Example",content:saved.example??sectionContent("Example")}
+ ];
  studyIndex=0;$("studyTopicTitle").textContent=root.text;renderStudySlide();$("studyDialog").showModal();
+}
+function persistStudySlide(){
+ const root=get(studyRootId),slide=studySlides[studyIndex];if(!root||!slide)return;
+ if(!root.studyContent||typeof root.studyContent!=="object")root.studyContent={};
+ root.studyContent[slide.key]=$("studySlideEditor").value;
+ slide.content=root.studyContent[slide.key];
+ save();
+ $("studySaveStatus").textContent="Saved ✓";
 }
 function renderStudySlide(){
  const slide=studySlides[studyIndex];if(!slide)return;
- $("studySlideLabel").textContent=slide.label.toUpperCase();$("studySlideContent").textContent=slide.content;
+ $("studySlideLabel").textContent=slide.label.toUpperCase();$("studySlideEditor").value=slide.content||"";
+ $("studySlideEditor").placeholder="Add your "+slide.label.toLowerCase()+" notes here…";
  $("studySlide").classList.toggle("study-code",slide.label==="Code");
  $("studyCounter").textContent=(studyIndex+1)+" / "+studySlides.length;
  $("studyProgressFill").style.width=((studyIndex+1)/studySlides.length*100)+"%";
  $("studyPrevBtn").disabled=studyIndex===0;
- $("studyNextBtn").disabled=studyIndex===studySlides.length-1;
+ $("studyNextBtn").disabled=false;
  $("studyNextBtn").textContent=studyIndex===studySlides.length-1?"Finished":"Next →";
+ $("studySaveStatus").textContent="Your notes save on this device.";
 }
-function moveStudySlide(direction){const next=studyIndex+direction;if(next<0||next>=studySlides.length)return;studyIndex=next;renderStudySlide();}
-$("closeStudyBtn").onclick=()=>$("studyDialog").close();
+function moveStudySlide(direction){persistStudySlide();const next=studyIndex+direction;if(next<0||next>=studySlides.length)return;studyIndex=next;renderStudySlide();}
+$("studySaveSlideBtn").onclick=persistStudySlide;
+$("closeStudyBtn").onclick=()=>{persistStudySlide();$("studyDialog").close();};
 $("studyPrevBtn").onclick=()=>moveStudySlide(-1);
-$("studyNextBtn").onclick=()=>{if(studyIndex===studySlides.length-1)$("studyDialog").close();else moveStudySlide(1);};
+$("studyNextBtn").onclick=()=>{persistStudySlide();if(studyIndex===studySlides.length-1)$("studyDialog").close();else{studyIndex++;renderStudySlide();}};
 let studyTouchX=0;
 $("studySlide").addEventListener("touchstart",e=>{studyTouchX=e.changedTouches[0].clientX;},{passive:true});
 $("studySlide").addEventListener("touchend",e=>{const delta=e.changedTouches[0].clientX-studyTouchX;if(Math.abs(delta)>45)moveStudySlide(delta<0?1:-1);},{passive:true});
 $("studyDialog").addEventListener("keydown",e=>{if(e.key==="ArrowRight")moveStudySlide(1);if(e.key==="ArrowLeft")moveStudySlide(-1);});
+$("studyDialog").addEventListener("click",e=>{if(e.target=== $("studyDialog"))persistStudySlide();});
 
 load();renderLists();dashboard();
 })();
