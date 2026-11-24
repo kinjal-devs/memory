@@ -16,3 +16,9 @@
 /* Explicit branch move control */
 .node-move{flex-shrink:0;border:1px solid #a99aff;background:#393451;color:#eeeaff;border-radius:6px;padding:5px 7px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
 .node-move.active{background:#b7aaff;color:#171426;border-color:#d0c8ff}
+
+/* Context menu for intentional branch movement */
+.move-context-menu{position:fixed;z-index:1000;min-width:140px;padding:5px;background:#202435;border:1px solid #625b8c;border-radius:9px;box-shadow:0 12px 35px #000b}
+.move-context-menu button{display:block;width:100%;padding:10px 12px;border:0;border-radius:6px;background:#b7aaff;color:#171426;font-size:12px;font-weight:800;text-align:left;cursor:pointer}
+.move-context-menu button:active{filter:brightness(.92)}
+.node-move{font-size:9px;color:#d6ceff;letter-spacing:.5px;white-space:nowrap}
