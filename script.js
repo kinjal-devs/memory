@@ -1,6 +1,26 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
+
 (() => {
 const $ = id => document.getElementById(id);
 const KEY = "memoryMindMapsV1";
+const DELETED_KEY = "memoryDeletedMapIdsV1";
+const firebaseConfig = {
+  apiKey: "AIzaSyAxRMVVWNh6ZM8c_MjkPzoIZLb27scjpd8",
+  authDomain: "memory-fe91e.firebaseapp.com",
+  projectId: "memory-fe91e",
+  storageBucket: "memory-fe91e.firebasestorage.app",
+  messagingSenderId: "152990671744",
+  appId: "1:152990671744:web:e46b8b58a7d1d19cd25765",
+  measurementId: "G-R0HJLGMQDG"
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+const googleProvider = new GoogleAuthProvider();
+let cloudUser = null, cloudBusy = false, cloudTimer = null;
+let hadLocalMaps = !!localStorage.getItem(KEY);
 let maps=[], activeId=null, selectedId=null, zoom=1, panX=0, panY=0, drag=null, panning=null, mode="add", target=null, moveMode=false;
 const uid=()=>Math.random().toString(36).slice(2,10);
 const makeNode=(text,parent=null,definition="")=>({id:uid(),text,definition,parent,children:[],collapsed:false,x:0,y:0});
@@ -8,7 +28,51 @@ function makeMap(title="Untitled map",rootText="Your big idea"){const r=makeNode
 function current(){return maps.find(m=>m.id===activeId);}
 function get(id){return current()?.nodes[id];}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&Array.isArray(s.maps)){maps=s.maps;activeId=s.activeId;}}catch(e){}if(!maps.length){const m=makeMap();maps=[m];activeId=m.id;}if(!current())activeId=maps[0].id;selectedId=current().root;}
-function save(){current().updated=Date.now();try{localStorage.setItem(KEY,JSON.stringify({maps,activeId}));$("saveStatus").textContent="● All changes saved";}catch(e){$("saveStatus").textContent="Storage full — export a backup";}renderLists();}
+function save(){current().updated=Date.now();try{localStorage.setItem(KEY,JSON.stringify({maps,activeId}));hadLocalMaps=true;$("saveStatus").textContent="● All changes saved";}catch(e){$("saveStatus").textContent="Storage full — export a backup";}renderLists();scheduleCloudSync();}
+
+function setCloudStatus(message){const el=$("cloudStatus");if(el)el.textContent=message;}
+function updateAccountUI(user){
+ const login=$("googleSignInBtn"),logout=$("signOutBtn"),name=$("accountName"),dot=$("profileDot");
+ if(login)login.hidden=!!user;if(logout)logout.hidden=!user;
+ if(name)name.textContent=user?(user.displayName||user.email||"Google account"):"My workspace";
+ if(dot)dot.textContent=user?(user.displayName||user.email||"M").charAt(0).toUpperCase():"M";
+ setCloudStatus(user?"Signed in · cloud sync enabled":"Saved on this device");
+}
+function scheduleCloudSync(){
+ if(!cloudUser||cloudBusy)return;
+ clearTimeout(cloudTimer);
+ cloudTimer=setTimeout(()=>syncCloud(),900);
+}
+async function syncCloud(){
+ if(!cloudUser||cloudBusy)return;
+ cloudBusy=true;setCloudStatus("Syncing maps…");
+ try{
+  const userId=cloudUser.uid, mapsRef=collection(db,"users",userId,"maps");
+  const deleted=JSON.parse(localStorage.getItem(DELETED_KEY)||"[]");
+  for(const id of deleted){await deleteDoc(doc(db,"users",userId,"maps",id));}
+  const snap=await getDocs(mapsRef);
+  const merged=new Map();
+  if(hadLocalMaps){maps.forEach(m=>{if(m&&m.id&&m.nodes&&m.root)merged.set(m.id,m);});}
+  snap.forEach(item=>{
+   const remote=item.data();if(!remote||!remote.id||!remote.nodes||!remote.root||deleted.includes(item.id))return;
+   const local=merged.get(remote.id);
+   if(!local||(Number(remote.updated)||0)>(Number(local.updated)||0))merged.set(remote.id,remote);
+  });
+  maps=Array.from(merged.values());
+  if(!maps.length){const fresh=makeMap();maps=[fresh];}
+  if(!maps.some(m=>m.id===activeId))activeId=maps[0].id;
+  if(!current())activeId=maps[0].id;
+  selectedId=current().root;
+  for(const m of maps){await setDoc(doc(db,"users",userId,"maps",m.id),m);}
+  localStorage.setItem(KEY,JSON.stringify({maps,activeId}));
+  localStorage.removeItem(DELETED_KEY);hadLocalMaps=true;
+  renderLists();if(!$("editor").hidden)render();
+  setCloudStatus("Synced to cloud");
+ }catch(error){
+  console.error("Memory cloud sync failed:",error);
+  setCloudStatus("Cloud sync issue · local maps are safe");
+ }finally{cloudBusy=false;}
+}
 function allDesc(id){const n=get(id);return n?n.children.flatMap(c=>[c,...allDesc(c)]):[];}
 function depth(id){let d=0,n=get(id);while(n&&n.parent){d++;n=get(n.parent);}return d;}
 function visible(){const out=[],m=current();function walk(id){const n=m.nodes[id];if(!n)return;out.push(id);if(!n.collapsed)n.children.forEach(walk);}walk(m.root);return out;}
@@ -72,7 +136,7 @@ $("saveDefinitionBtn").onclick=()=>{const n=get(definitionTarget);if(!n)return;n
 function openDialog(which,id){mode=which;target=id;$("nodeDialogTitle").textContent=which==="rename"?"Rename topic":which==="child"?"Add a branch":"Add a topic";$("nodeText").value=which==="rename"?get(id).text:"";$("nodeDialog").showModal();setTimeout(()=>$("nodeText").focus(),50);}
 $("nodeForm").addEventListener("submit",e=>{if(e.submitter?.value==="cancel")return;e.preventDefault();const value=$("nodeText").value.trim();if(!value)return;if(mode==="rename")get(target).text=value;else{const parentId=mode==="child"?target:current().root,p=get(parentId),n=makeNode(value,parentId);current().nodes[n.id]=n;p.children.push(n.id);p.collapsed=false;selectedId=n.id;}$("nodeDialog").close();render();save();});
 $("nodeText").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("nodeForm").requestSubmit($("nodeSaveBtn"));}});
-function deleteSelected(){const m=current(),n=get(selectedId);if(!n)return;if(n.id===m.root){if(!confirm("Delete this whole mind map?"))return;maps=maps.filter(x=>x.id!==m.id);if(!maps.length){const fresh=makeMap();maps=[fresh];activeId=fresh.id;}else activeId=maps[0].id;selectedId=current().root;dashboard();save();return;}if(!confirm("Delete this topic and all its branches?"))return;get(n.parent).children=get(n.parent).children.filter(x=>x!==n.id);[n.id,...allDesc(n.id)].forEach(id=>delete m.nodes[id]);selectedId=n.parent;render();save();}
+function deleteSelected(){const m=current(),n=get(selectedId);if(!n)return;if(n.id===m.root){if(!confirm("Delete this whole mind map?"))return;const deletedIds=JSON.parse(localStorage.getItem(DELETED_KEY)||"[]");if(!deletedIds.includes(m.id))deletedIds.push(m.id);localStorage.setItem(DELETED_KEY,JSON.stringify(deletedIds));maps=maps.filter(x=>x.id!==m.id);if(!maps.length){const fresh=makeMap();maps=[fresh];activeId=fresh.id;}else activeId=maps[0].id;selectedId=current().root;dashboard();save();return;}if(!confirm("Delete this topic and all its branches?"))return;get(n.parent).children=get(n.parent).children.filter(x=>x!==n.id);[n.id,...allDesc(n.id)].forEach(id=>delete m.nodes[id]);selectedId=n.parent;render();save();}
 $("newMapBtn").onclick=$("dashboardNewBtn").onclick=$("startBlankBtn").onclick=()=>createMap();
 $("workspaceBtn").onclick=dashboard;$("templatesBtn").onclick=()=>{dashboard();document.querySelector(".quick-ideas").scrollIntoView({behavior:"smooth"});};
 $("mapTitle").onchange=e=>{current().title=e.target.value.trim()||"Untitled map";render();save();};
@@ -111,5 +175,9 @@ document.querySelectorAll(".idea-card").forEach(b=>b.onclick=()=>{const [title,b
 $("mobileMenu").onclick=()=>$("sidebar").classList.toggle("open");$("mapList").onclick=()=>$("sidebar").classList.remove("open");
 const aiMap=document.createElement("button");aiMap.className="tool-btn";aiMap.textContent="▤ PDF/Notes";aiMap.onclick=()=>$("importDialog").showModal();$("deleteBtn").parentNode.insertBefore(aiMap,$("deleteBtn"));
 $("pdfFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(!window.pdfjsLib)throw Error("PDF reader couldn't load. Please try pasting your notes instead.");pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";const doc=await pdfjsLib.getDocument(await f.arrayBuffer()).promise,parts=[];for(let i=1;i<=Math.min(doc.numPages,10);i++){const page=await doc.getPage(i),content=await page.getTextContent(),txt=content.items.map(x=>x.str).join(" ").trim();if(txt)parts.push(txt);}const source=parts.join("\n\n").slice(0,3800);if(!source)throw Error("No selectable text found in this PDF. It may be a scanned document.");$("importText").value="";$("importDialog").showModal();await createAIMindMap(source,f.name.replace(/\.pdf$/i,""));}catch(err){alert(err.message||"Could not read this PDF.");}e.target.value="";};
+
+$("googleSignInBtn").onclick=async()=>{try{setCloudStatus("Opening Google sign-in…");await signInWithRedirect(auth,googleProvider);}catch(error){setCloudStatus("Sign-in failed · please try again");alert("Google sign-in failed: "+(error.message||"Please try again."));}};
+$("signOutBtn").onclick=async()=>{try{await signOut(auth);}catch(error){alert("Couldn't sign out: "+(error.message||"Please try again."));}};
+onAuthStateChanged(auth,async user=>{cloudUser=user;updateAccountUI(user);if(user)await syncCloud();});
 load();renderLists();dashboard();
 })();
