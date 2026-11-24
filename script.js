@@ -379,7 +379,7 @@ $("studyPointsTable").addEventListener("keydown",e=>{
  if(nextCell){nextCell.focus();nextCell.scrollIntoView({block:"nearest",inline:"nearest"});}
 });
 $("studyPrevBtn").onclick=()=>moveStudySlide(-1);
-$("studyNextBtn").onclick=()=>{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();studyEditing=false;$("studyDialog").close();};
+$("studyNextBtn").onclick=()=>{const dialog=$("studyDialog");try{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();}finally{studyEditing=false;if(dialog.open)dialog.close();}};
 let studyTouchX=0;
 $("studySlide").addEventListener("touchstart",e=>{studyTouchX=e.changedTouches[0].clientX;},{passive:true});
 $("studySlide").addEventListener("touchend",e=>{const delta=e.changedTouches[0].clientX-studyTouchX;if(Math.abs(delta)>45)moveStudySlide(delta<0?1:-1);},{passive:true});
