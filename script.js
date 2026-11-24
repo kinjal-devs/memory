@@ -292,17 +292,17 @@ function startStudyMode(){
  const descendants=[];
  function collect(id){const node=m.nodes[id];if(!node)return;descendants.push(node);node.children.forEach(collect);}
  root.children.forEach(collect);
- const kind=node=>{const label=String(node.text||"").trim().toLowerCase();if(/^syntax\\b/.test(label))return "Syntax";if(/^code\\b/.test(label))return "Code";if(/^example\\b/.test(label))return "Example";return "";};
+ const kind=node=>{const label=String(node.text||"").trim().toLowerCase();if(/^syntax\b/.test(label))return "Syntax";if(/^code\b/.test(label))return "Code";if(/^example\b/.test(label))return "Example";return "";};
  const contentFor=node=>{
   const parts=[];if(node.definition)parts.push(node.definition);
-  const addChildren=id=>{const parent=m.nodes[id];if(!parent)return;parent.children.forEach(childId=>{const child=m.nodes[childId];if(!child)return;parts.push(child.text+(child.definition?"\\n"+child.definition:""));addChildren(childId);});};
-  addChildren(node.id);return parts.join("\\n\\n").trim();
+  const addChildren=id=>{const parent=m.nodes[id];if(!parent)return;parent.children.forEach(childId=>{const child=m.nodes[childId];if(!child)return;parts.push(child.text+(child.definition?"\n"+child.definition:""));addChildren(childId);});};
+  addChildren(node.id);return parts.join("\n\n").trim();
  };
  const theory=descendants.filter(node=>!kind(node));
  const definitionParts=[];if(root.definition)definitionParts.push(root.definition);
- theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\\n"+node.definition:""));});
- studySlides=[{label:"Definition",content:definitionParts.join("\\n\\n").trim()||"Add a definition using the ⓘ button on this topic. Theory notes from its branches will also appear here."}];
- ["Syntax","Code","Example"].forEach(label=>{const matches=descendants.filter(node=>kind(node)===label);if(matches.length){studySlides.push({label,content:matches.map(contentFor).filter(Boolean).join("\\n\\n")||("Add "+label.toLowerCase()+" content to this branch.")});}});
+ theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\n"+node.definition:""));});
+ studySlides=[{label:"Definition",content:definitionParts.join("\n\n").trim()||"Add a definition using the ⓘ button on this topic. Theory notes from its branches will also appear here."}];
+ ["Syntax","Code","Example"].forEach(label=>{const matches=descendants.filter(node=>kind(node)===label);if(matches.length){studySlides.push({label,content:matches.map(contentFor).filter(Boolean).join("\n\n")||("Add "+label.toLowerCase()+" content to this branch.")});}});
  studyIndex=0;$("studyTopicTitle").textContent=root.text+" · Study Mode";renderStudySlide();$("studyDialog").showModal();
 }
 function renderStudySlide(){
@@ -324,5 +324,6 @@ let studyTouchX=0;
 $("studySlide").addEventListener("touchstart",e=>{studyTouchX=e.changedTouches[0].clientX;},{passive:true});
 $("studySlide").addEventListener("touchend",e=>{const delta=e.changedTouches[0].clientX-studyTouchX;if(Math.abs(delta)>45)moveStudySlide(delta<0?1:-1);},{passive:true});
 $("studyDialog").addEventListener("keydown",e=>{if(e.key==="ArrowRight")moveStudySlide(1);if(e.key==="ArrowLeft")moveStudySlide(-1);});
-\nload();renderLists();dashboard();
+
+load();renderLists();dashboard();
 })();
