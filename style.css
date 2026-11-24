@@ -473,3 +473,104 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
   border:1px solid rgba(150,158,190,.25) !important;
   box-shadow:0 14px 42px rgba(0,0,0,.38) !important;
 }
+
+
+/* Study Mode: a genuinely small floating window, not a full-screen deck */
+.study-dialog{
+  position:fixed !important;
+  inset:50% auto auto 50% !important;
+  transform:translate(-50%,-50%) !important;
+  width:min(390px,calc(100vw - 28px)) !important;
+  max-width:390px !important;
+  height:auto !important;
+  max-height:min(72dvh,560px) !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:16px !important;
+  display:none;
+  flex-direction:column;
+  gap:10px !important;
+  overflow:auto !important;
+  border:1px solid #454b63 !important;
+  border-radius:16px !important;
+  background:rgba(23,27,41,.97) !important;
+  box-shadow:0 18px 55px #000b !important;
+}
+.study-dialog[open]{display:flex}
+.study-dialog::backdrop{
+  background:rgba(7,9,18,.18) !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+.study-head{padding:0 34px 0 0 !important;min-height:30px}
+.study-head h2{font-size:16px !important}
+.study-head .icon-close{top:10px !important;left:auto !important;right:10px !important}
+.study-head>div:first-child{padding-left:0 !important}
+.study-progress{margin:4px 0 0 !important}
+.study-slide{
+  flex:0 1 auto !important;
+  width:100% !important;
+  min-height:110px !important;
+  max-height:34dvh !important;
+  margin:2px 0 !important;
+  padding:16px !important;
+  gap:10px !important;
+  border-radius:11px !important;
+  background:#202638 !important;
+  box-shadow:none !important;
+}
+.study-slide-label{font-size:9px !important;margin:0 !important}
+.study-slide-content{font-size:15px !important;line-height:1.5 !important}
+.study-slide.study-code .study-slide-content{font-size:12px !important;padding:10px !important}
+.study-slide-editor{min-height:120px !important;max-height:28dvh !important;font-size:14px !important}
+.study-slide-actions{gap:7px}
+.study-slide-actions button{min-height:32px !important;padding:6px 10px !important}
+.study-floating-actions{
+  position:static !important;
+  transform:none !important;
+  display:flex !important;
+  flex-direction:row !important;
+  justify-content:flex-end !important;
+  gap:6px !important;
+  order:3;
+}
+.study-floating-actions button,
+.study-controls button{
+  min-height:30px !important;
+  padding:6px 9px !important;
+  font-size:10px !important;
+  border-radius:7px !important;
+}
+.study-floating-actions button:last-child{
+  position:static !important;
+}
+.study-controls{
+  position:static !important;
+  transform:none !important;
+  display:flex !important;
+  flex-direction:row !important;
+  justify-content:space-between !important;
+  gap:7px !important;
+  order:4;
+}
+.study-controls button{flex:1;min-width:0 !important}
+.study-hint{
+  position:static !important;
+  transform:none !important;
+  margin:0 !important;
+  text-align:center !important;
+  font-size:9px !important;
+  white-space:normal !important;
+}
+@media(max-width:600px){
+  .study-dialog{
+    width:min(360px,calc(100vw - 24px)) !important;
+    max-height:74dvh !important;
+    padding:14px !important;
+    gap:9px !important;
+    border-radius:14px !important;
+  }
+  .study-slide{min-height:100px !important;max-height:32dvh !important;padding:13px !important}
+  .study-slide-content{font-size:14px !important;line-height:1.5 !important}
+  .study-floating-actions button,.study-controls button{min-height:29px !important;padding:5px 8px !important;font-size:10px !important}
+}
