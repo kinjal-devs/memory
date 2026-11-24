@@ -712,7 +712,7 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
 .study-table-editor{display:flex;flex-direction:column;gap:6px;min-width:0}
 .study-table-actions{display:flex;justify-content:flex-end}
 .study-table-actions button{min-height:24px;padding:2px 5px;border:0;background:transparent;color:#dfe4ef;font-size:11px}
-#studyPointsTable .study-row-delete-head,#studyPointsTable .study-row-delete-cell{position:sticky;left:0;z-index:2;min-width:28px;width:28px;padding:2px;text-align:center;background:#202536}
+#studyPointsTable .study-row-delete-head,#studyPointsTable .study-row-delete-cell{position:sticky;right:0;z-index:3;min-width:30px;width:30px;padding:2px;text-align:center;background:#202536}
 #studyPointsTable .study-delete-row{width:20px;height:22px;padding:0;border:0;background:transparent;color:rgba(255,255,255,.72);font:16px/1 "DM Sans",sans-serif;cursor:pointer}
 #studyPointsTable .study-delete-row:active{color:#fff}
 .study-table-scroll{max-width:100%;overflow:auto;border:0;border-radius:0}
