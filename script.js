@@ -135,9 +135,11 @@ function showView(view,push=true){if(view!==currentView&&push)history.pushState(
 function dashboard(push=true){showView("dashboard",push);}
 function editor(push=true){showView("editor",push);}
 history.replaceState({memoryView:"dashboard"},"",location.href);
+let memoryMobileResize;
+window.addEventListener("resize",()=>{clearTimeout(memoryMobileResize);memoryMobileResize=setTimeout(()=>{if(currentView==="editor")fit();},140);});
 window.addEventListener("popstate",event=>{const sidebar=$("sidebar"),menuButton=$("mobileMenu");if(sidebar?.classList.contains("open")){sidebar.classList.remove("open");if(menuButton){menuButton.textContent="☰";menuButton.setAttribute("aria-expanded","false");menuButton.setAttribute("aria-label","Open navigation menu");}history.replaceState({memoryView:currentView},"",location.href);return;}const view=event.state?.memoryView||(currentView==="editor"?"dashboard":"dashboard");showView(view,false);});
-function openMap(id){activeId=id;selectedId=current().root;zoom=1;panX=25;panY=20;editor();save();}
-function createMap(title="Untitled map",root="Your big idea"){const m=makeMap(title,root);maps.unshift(m);activeId=m.id;selectedId=m.root;zoom=1;panX=25;panY=20;save();editor();}
+function openMap(id){activeId=id;selectedId=current().root;zoom=1;panX=25;panY=20;editor();fit();save();}
+function createMap(title="Untitled map",root="Your big idea"){const m=makeMap(title,root);maps.unshift(m);activeId=m.id;selectedId=m.root;zoom=1;panX=25;panY=20;save();editor();fit();}
 let definitionTarget=null;
 function openDefinition(id){const n=get(id);if(!n)return;definitionTarget=id;$("definitionTitle").textContent=n.text;$("definitionText").value=n.definition||"";$("definitionDialog").showModal();}
 function closeDefinitionCard(){const card=$("definitionCard");if(card)card.remove();}
@@ -155,7 +157,20 @@ $("workspaceBtn").onclick=dashboard;$("templatesBtn").onclick=()=>{dashboard();d
 $("mapTitle").onchange=e=>{current().title=e.target.value.trim()||"Untitled map";render();save();};
 $("addNodeBtn").onclick=()=>openDialog("add",selectedId);$("addChildBtn").onclick=()=>openDialog("child",selectedId||current().root);$("renameBtn").onclick=()=>selectedId&&openDialog("rename",selectedId);$("deleteBtn").onclick=deleteSelected;
 $("zoomIn").onclick=()=>zoomFromCenter(1.05);$("zoomOut").onclick=()=>zoomFromCenter(1/1.05);
-function fit(){zoom=1;panX=25;panY=20;transform();}$("fitBtn").onclick=$("centerBtn").onclick=fit;
+function fit(){
+ const wrap=$("canvasWrap"),m=current();if(!wrap||!m)return;
+ const ids=visible();if(!ids.length)return;
+ const nodes=ids.map(id=>m.nodes[id]);
+ const minX=Math.min(...nodes.map(n=>n.x)),minY=Math.min(...nodes.map(n=>n.y));
+ const maxX=Math.max(...nodes.map(n=>n.x+Math.max(180,$("nodesLayer").querySelector('[data-id="'+n.id+'"]')?.offsetWidth||180)));
+ const maxY=Math.max(...nodes.map(n=>n.y+58));
+ const pad=34,availableW=Math.max(120,wrap.clientWidth-pad*2),availableH=Math.max(120,wrap.clientHeight-pad*2);
+ zoom=Math.max(.18,Math.min(1.35,availableW/Math.max(1,maxX-minX),availableH/Math.max(1,maxY-minY)));
+ panX=(wrap.clientWidth-(maxX-minX)*zoom)/2-minX*zoom;
+ panY=(wrap.clientHeight-(maxY-minY)*zoom)/2-minY*zoom;
+ transform();
+}
+$("fitBtn").onclick=$("centerBtn").onclick=fit;
 $("collapseBtn").onclick=()=>{Object.values(current().nodes).forEach(n=>{if(n.children.length)n.collapsed=true;});current().nodes[current().root].collapsed=false;render();save();};
 $("expandBtn").onclick=()=>{Object.values(current().nodes).forEach(n=>n.collapsed=false);render();save();};
 const activePointers=new Map();let pinchStart=null;
