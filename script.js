@@ -184,7 +184,7 @@ $("canvasWrap").addEventListener("pointerdown",e=>{
 });
 $("canvasWrap").addEventListener("pointermove",e=>{
  if(!activePointers.has(e.pointerId))return;activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(activePointers.size>=2&&pinchStart){const pts=[...activePointers.values()],midX=(pts[0].x+pts[1].x)/2,midY=(pts[0].y+pts[1].y)/2,ratio=pointerDistance(pts[0],pts[1])/Math.max(1,pinchStart.distance);zoom=Math.max(.2,Math.min(3.5,pinchStart.zoom*Math.pow(ratio,.72)));const rect=$("canvasWrap").getBoundingClientRect(),startX=pinchStart.midX-rect.left,startY=pinchStart.midY-rect.top,worldX=(startX-pinchStart.panX)/pinchStart.zoom,worldY=(startY-pinchStart.panY)/pinchStart.zoom;panX=(midX-rect.left)-worldX*zoom;panY=(midY-rect.top)-worldY*zoom;transform();}
+ if(activePointers.size>=2&&pinchStart){const pts=[...activePointers.values()],midX=(pts[0].x+pts[1].x)/2,midY=(pts[0].y+pts[1].y)/2,ratio=pointerDistance(pts[0],pts[1])/Math.max(1,pinchStart.distance);zoom=Math.max(.2,Math.min(3.5,pinchStart.zoom*Math.pow(ratio,1.3)));const rect=$("canvasWrap").getBoundingClientRect(),startX=pinchStart.midX-rect.left,startY=pinchStart.midY-rect.top,worldX=(startX-pinchStart.panX)/pinchStart.zoom,worldY=(startY-pinchStart.panY)/pinchStart.zoom;panX=(midX-rect.left)-worldX*zoom;panY=(midY-rect.top)-worldY*zoom;transform();}
  else if(panning){panX=e.clientX-panning.x;panY=e.clientY-panning.y;transform();}
 });
 function endCanvasPointer(e){activePointers.delete(e.pointerId);if(activePointers.size<2)pinchStart=null;if(activePointers.size===1){const p=[...activePointers.values()][0];panning={x:p.x-panX,y:p.y-panY};}else panning=null;if(!activePointers.size)$("canvasWrap").classList.remove("is-panning");}
