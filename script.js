@@ -365,7 +365,19 @@ $("studyPointsTable").addEventListener("input",e=>{
  saveStudyTable();
 });
 $("studyAddRowBtn").onclick=()=>{if(!studyTableData)return;studyTableData.rows.push(Array(studyTableData.headers.length).fill(""));renderStudyTable();saveStudyTable();};
-$("studyAddColumnBtn").onclick=()=>{if(!studyTableData)return;studyTableData.headers.push("Column "+(studyTableData.headers.length+1));studyTableData.rows.forEach(row=>row.push(""));renderStudyTable();saveStudyTable();};
+$("studyPointsTable").addEventListener("keydown",e=>{
+ if(e.key!=="Enter"||!e.target.matches("textarea[data-row]"))return;
+ e.preventDefault();
+ if(!studyTableData)return;
+ const rowIndex=Number(e.target.dataset.row);
+ const nextCol=studyTableData.headers.length;
+ studyTableData.headers.push("");
+ studyTableData.rows.forEach(row=>row.push(""));
+ renderStudyTable();
+ saveStudyTable();
+ const nextCell=$("studyPointsTable").querySelector('textarea[data-row="'+rowIndex+'"][data-col="'+nextCol+'"]');
+ if(nextCell){nextCell.focus();nextCell.scrollIntoView({block:"nearest",inline:"nearest"});}
+});
 $("studyPrevBtn").onclick=()=>moveStudySlide(-1);
 $("studyNextBtn").onclick=()=>{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();studyEditing=false;$("studyDialog").close();};
 let studyTouchX=0;
