@@ -724,3 +724,6 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
 #studyPointsTable textarea{min-height:58px}
 #studyPointsTable input::placeholder,#studyPointsTable textarea::placeholder{color:rgba(255,255,255,.48)}
 .study-slide:has(.study-table-editor:not([hidden])){min-height:260px}
+
+/* Respect the hidden state of the Study Mode table section. */
+#studyTableEditor[hidden]{display:none!important}
