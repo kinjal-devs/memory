@@ -718,6 +718,7 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
 .study-table-scroll{max-width:100%;overflow:auto;border:0;border-radius:0}
 #studyPointsTable{width:max-content;min-width:100%;border-collapse:collapse;table-layout:fixed}
 #studyPointsTable th,#studyPointsTable td{min-width:125px;border:1px solid rgba(255,255,255,.72);padding:2px;vertical-align:top;background:transparent}
+#studyPointsTable th:last-child,#studyPointsTable td:last-child{border-right:0}
 #studyPointsTable th{background:transparent}
 #studyPointsTable input,#studyPointsTable textarea{display:block;width:100%;min-width:0;box-sizing:border-box;border:0;outline:0;background:transparent;color:#fff;font:12px/1.5 "DM Sans",sans-serif;padding:6px;resize:vertical}
 #studyPointsTable input{font-weight:500;color:#fff}
