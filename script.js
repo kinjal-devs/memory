@@ -320,12 +320,14 @@ function startStudyMode(topicId=selectedId){
  theory.forEach(node=>{const level=(()=>{let d=0,p=node;while(p&&p.parent&&p.parent!==root.id){d++;p=m.nodes[p.parent];}return d;})();definitionParts.push((level?"• ":"")+node.text+(node.definition?"\n"+node.definition:""));});
  const sectionContent=label=>descendants.filter(node=>kind(node)===label).map(contentFor).filter(Boolean).join("\n\n");
  const saved=root.studyContent||{};
- studySlides=[
+ const allSlides=[
   {key:"definition",label:"Definition",content:saved.definition??(definitionParts.join("\n\n").trim())},
   {key:"syntax",label:"Syntax",content:saved.syntax??sectionContent("Syntax")},
   {key:"code",label:"Code",content:saved.code??sectionContent("Code")},
   {key:"example",label:"Example",content:saved.example??sectionContent("Example")}
  ];
+ studySlides=allSlides.filter(slide=>String(slide.content||"").trim().length>0);
+ if(!studySlides.length)studySlides=[allSlides[0]];
  studyIndex=0;$("studyTopicTitle").textContent=root.text;renderStudySlide();$("studyDialog").showModal();
 }
 function persistStudySlide(){
@@ -347,9 +349,20 @@ function renderStudySlide(){
  $("studyNextBtn").disabled=false;
  $("studyNextBtn").textContent=studyIndex===studySlides.length-1?"Finished":"Next →";
  $("studySaveStatus").textContent="Your notes save on this device.";
+ const savedKeys=new Set(studySlides.map(item=>item.key));
+ const nextEmpty=["definition","syntax","code","example"].find(key=>!savedKeys.has(key));
+ const addBtn=$("studyAddSlideBtn");
+ if(addBtn){addBtn.hidden=!nextEmpty;addBtn.textContent=nextEmpty?"＋ Add "+({definition:"Definition",syntax:"Syntax",code:"Code",example:"Example"}[nextEmpty]):"All slides added";}
 }
 function moveStudySlide(direction){persistStudySlide();const next=studyIndex+direction;if(next<0||next>=studySlides.length)return;studyIndex=next;renderStudySlide();}
 $("studySaveSlideBtn").onclick=persistStudySlide;
+$("studyAddSlideBtn").onclick=()=>{
+ const labels={definition:"Definition",syntax:"Syntax",code:"Code",example:"Example"};
+ const key=["definition","syntax","code","example"].find(k=>!studySlides.some(slide=>slide.key===k));
+ if(!key)return;
+ studySlides.push({key,label:labels[key],content:""});
+ studyIndex=studySlides.length-1;renderStudySlide();$("studySlideEditor").focus();
+};
 $("closeStudyBtn").onclick=()=>{persistStudySlide();$("studyDialog").close();};
 $("studyPrevBtn").onclick=()=>moveStudySlide(-1);
 $("studyNextBtn").onclick=()=>{persistStudySlide();if(studyIndex===studySlides.length-1)$("studyDialog").close();else{studyIndex++;renderStudySlide();}};
