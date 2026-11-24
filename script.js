@@ -311,7 +311,9 @@ function startStudyMode(topicId=selectedId){
   {key:"definition",label:"Definition",content:saved.definition??(root.definition||"")},
   {key:"syntax",label:"Syntax",content:saved.syntax??""},
   {key:"code",label:"Code",content:saved.code??""},
-  {key:"example",label:"Example",content:saved.example??""}
+  {key:"example",label:"Example",content:saved.example??""},
+  {key:"diagram",label:"Diagram",content:saved.diagram??""},
+  {key:"table",label:"Table",content:saved.table??""}
  ];
  studySlides=allSlides;
  const firstFilled=studySlides.findIndex(slide=>String(slide.content||"").trim());
