@@ -138,7 +138,7 @@ history.replaceState({memoryView:"dashboard"},"",location.href);
 let memoryMobileResize;
 window.addEventListener("resize",()=>{clearTimeout(memoryMobileResize);memoryMobileResize=setTimeout(()=>{if(currentView==="editor")fit();},140);});
 window.addEventListener("popstate",event=>{const sidebar=$("sidebar"),menuButton=$("mobileMenu");if(sidebar?.classList.contains("open")){sidebar.classList.remove("open");if(menuButton){menuButton.textContent="☰";menuButton.setAttribute("aria-expanded","false");menuButton.setAttribute("aria-label","Open navigation menu");}history.replaceState({memoryView:currentView},"",location.href);return;}const view=event.state?.memoryView||(currentView==="editor"?"dashboard":"dashboard");showView(view,false);});
-function collapseSubtopics(){const m=current();if(!m)return;const root=m.nodes[m.root];if(!root)return;root.collapsed=false;root.children.forEach(id=>{const topic=m.nodes[id];if(topic&&topic.children.length)topic.collapsed=true;});}
+function collapseSubtopics(){const m=current();if(!m)return;Object.values(m.nodes).forEach(node=>{node.collapsed=!!node.children.length;});const root=m.nodes[m.root];if(root)root.collapsed=false;}
 function openMap(id){activeId=id;selectedId=current().root;collapseSubtopics();zoom=1;panX=25;panY=20;editor();fit();save();}
 function createMap(title="Untitled map",root="Your big idea"){const m=makeMap(title,root);maps.unshift(m);activeId=m.id;selectedId=m.root;zoom=1;panX=25;panY=20;save();editor();fit();}
 let definitionTarget=null;
