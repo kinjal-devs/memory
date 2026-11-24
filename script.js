@@ -34,7 +34,7 @@ const makeNode=(text,parent=null,definition="")=>({id:uid(),text,definition,pare
 function makeMap(title="Untitled map",rootText="Your big idea"){const r=makeNode(rootText);return{id:uid(),title,root:r.id,nodes:{[r.id]:r},updated:Date.now()};}
 function current(){return maps.find(m=>m.id===activeId);}
 function get(id){return current()?.nodes[id];}
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&Array.isArray(s.maps)){maps=s.maps;activeId=s.activeId;}}catch(e){}if(!maps.length){const m=makeMap();maps=[m];activeId=m.id;}if(!current())activeId=maps[0].id;selectedId=current().root;}
+function load(){try{const raw=localStorage.getItem(KEY);const s=JSON.parse(raw||"null");if(s&&Array.isArray(s.maps)){const valid=s.maps.filter(m=>m&&m.id&&m.nodes&&m.root&&m.nodes[m.root]);if(valid.length){maps=valid;activeId=s.activeId;hadLocalMaps=true;}else if(raw){localStorage.setItem("memoryRecoveryBackupV1",raw);}}else if(raw){localStorage.setItem("memoryRecoveryBackupV1",raw);}}catch(e){try{const raw=localStorage.getItem(KEY);if(raw)localStorage.setItem("memoryRecoveryBackupV1",raw);}catch(ignore){}}if(!maps.length){const m=makeMap();maps=[m];activeId=m.id;}if(!current())activeId=maps[0].id;selectedId=current().root;}
 function save(){current().updated=Date.now();try{localStorage.setItem(KEY,JSON.stringify({maps,activeId}));hadLocalMaps=true;$("saveStatus").textContent="● All changes saved";}catch(e){$("saveStatus").textContent="Storage full — export a backup";}renderLists();scheduleCloudSync();}
 
 function setCloudStatus(message){const el=$("cloudStatus");if(el)el.textContent=message;}
@@ -67,8 +67,9 @@ async function syncCloud(){
    const local=merged.get(remote.id);
    if(!local||(Number(remote.updated)||0)>(Number(local.updated)||0))merged.set(remote.id,remote);
   });
-  maps=Array.from(merged.values());
-  if(!maps.length){const fresh=makeMap();maps=[fresh];}
+   if(!merged.size&&!hadLocalMaps){setCloudStatus("No saved cloud maps found · starter map not uploaded");return;}
+   maps=Array.from(merged.values());
+   if(!maps.length){setCloudStatus("No maps to sync · nothing was overwritten");return;}
   if(!maps.some(m=>m.id===activeId))activeId=maps[0].id;
   if(!current())activeId=maps[0].id;
   selectedId=current().root;
