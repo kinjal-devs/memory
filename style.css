@@ -138,3 +138,5 @@
 .account-btn{display:inline-flex;align-items:center;justify-content:center;margin-top:9px;padding:7px 10px;border:1px solid #625b8c;border-radius:7px;background:#292640;color:#e8e3ff;font-size:10px;font-weight:700}
 .account-btn:active{background:#b7aaff;color:#171426}
 .account-btn[hidden]{display:none}
+
+.map-card-actions{display:flex;justify-content:flex-end;margin-top:10px}.map-card-rename{border:1px solid #41465b;background:#222638;color:#c8c0ff;border-radius:7px;padding:6px 9px;font-size:10px;font-weight:600}.map-card-rename:hover{border-color:#a99aff;background:#302b49}.map-card:focus-visible{outline:2px solid #a99aff;outline-offset:3px}
