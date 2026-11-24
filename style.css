@@ -678,3 +678,18 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
 .study-controls button:disabled{opacity:.35 !important}
 .study-controls button:active{color:#fff !important}
 @media(max-width:600px){.study-dialog{width:min(340px,calc(100vw - 24px)) !important;padding:15px !important}.study-slide-content{font-size:13px !important}.study-controls{gap:12px !important}.study-controls button{font-size:10px !important}}
+
+
+/* Place the compact Study Mode window on the right edge */
+.study-dialog{
+  inset:50% 18px auto auto !important;
+  transform:translateY(-50%) !important;
+  margin:0 !important;
+}
+@media(max-width:600px){
+  .study-dialog{
+    inset:50% 10px auto auto !important;
+    transform:translateY(-50%) !important;
+    width:min(340px,calc(100vw - 20px)) !important;
+  }
+}
