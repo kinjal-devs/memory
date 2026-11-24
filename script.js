@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 (() => {
@@ -191,6 +191,7 @@ $("pdfFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(!w
 
 
 $("signOutBtn").onclick=async()=>{try{await signOut(auth);}catch(error){alert("Couldn't sign out: "+(error.message||"Please try again."));}};
+getRedirectResult(auth).then(result=>{if(result?.user){cloudUser=result.user;updateAccountUI(result.user);setCloudStatus("Google connected · loading your maps…");}}).catch(error=>{console.error("Google redirect sign-in failed:",error);setCloudStatus("Google sign-in error · "+(error.code||"please try again"));});
 onAuthStateChanged(auth,async user=>{cloudUser=user;updateAccountUI(user);if(user)await syncCloud();});
 load();renderLists();dashboard();
 })();
