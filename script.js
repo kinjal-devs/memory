@@ -328,7 +328,7 @@ function startStudyMode(topicId=selectedId){
  ];
  studySlides=allSlides.filter(slide=>String(slide.content||"").trim().length>0);
  if(!studySlides.length)studySlides=[allSlides[0]];
- studyIndex=0;studyEditing=false;$("studyTopicTitle").textContent=root.text;renderStudySlide();$("studyDialog").showModal();
+ studyIndex=0;studyEditing=false;renderStudySlide();$("studyDialog").showModal();
 }
 function persistStudySlide(){
  const root=get(studyRootId),slide=studySlides[studyIndex];if(!root||!slide)return;
