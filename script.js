@@ -301,8 +301,23 @@ $("pdfFile").onchange=async e=>{
 $("signOutBtn").onclick=async()=>{try{await signOut(auth);}catch(error){alert("Couldn't sign out: "+(error.message||"Please try again."));}};
 onAuthStateChanged(auth,async user=>{cloudUser=user;updateAccountUI(user);if(user){await syncCloud();}});
 
-// Swipeable, editable review slides. Each slide's notes are saved on the topic.
-let studySlides=[],studyIndex=0,studyRootId=null,studyEditing=false;
+// Swipeable review slides, with a built-in editable points table.
+let studySlides=[],studyIndex=0,studyRootId=null,studyEditing=false,studyTableData=null;
+function defaultStudyTable(){return {headers:["Column 1","Column 2"],rows:[["",""],["",""]]};}
+function readStudyTable(value){
+ try{const data=JSON.parse(value);if(data&&Array.isArray(data.headers)&&Array.isArray(data.rows)&&data.headers.length)return {headers:data.headers.map(String),rows:data.rows.map(row=>Array.from({length:data.headers.length},(_,i)=>String(row?.[i]??"")))};}catch(e){}
+ const table=defaultStudyTable();if(value)table.rows[0][0]=String(value);return table;
+}
+function saveStudyTable(){
+ const root=get(studyRootId),slide=studySlides[studyIndex];if(!root||!slide||slide.key!=="table"||!studyTableData)return;
+ if(!root.studyContent||typeof root.studyContent!=="object")root.studyContent={};
+ root.studyContent.table=JSON.stringify(studyTableData);slide.content=root.studyContent.table;save();
+}
+function renderStudyTable(){
+ const table=$("studyPointsTable");if(!table||!studyTableData)return;
+ const esc=value=>String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+ table.innerHTML="<thead><tr>"+studyTableData.headers.map((h,i)=>'<th><input class="study-table-header" data-col="'+i+'" aria-label="Column '+(i+1)+' heading" placeholder="Column '+(i+1)+'" value="'+esc(h)+'"></th>').join("")+"</tr></thead><tbody>"+studyTableData.rows.map((row,r)=>"<tr>"+row.map((v,c)=>'<td><textarea data-row="'+r+'" data-col="'+c+'" aria-label="Point '+(r+1)+', column '+(c+1)+'" placeholder="Write a point…">'+esc(v)+'</textarea></td>').join("")+"</tr>").join("")+"</tbody>";
+}
 function startStudyMode(topicId=selectedId){
  const m=current();if(!m)return;const root=get(topicId)||get(selectedId)||get(m.root);if(!root)return;
  studyRootId=root.id;
@@ -317,39 +332,47 @@ function startStudyMode(topicId=selectedId){
  ];
  studySlides=allSlides;
  const firstFilled=studySlides.findIndex(slide=>String(slide.content||"").trim());
- studyIndex=firstFilled>=0?firstFilled:0;studyEditing=firstFilled<0;renderStudySlide();$("studyDialog").showModal();
+ studyIndex=firstFilled>=0?firstFilled:0;studyEditing=firstFilled<0;studyTableData=null;renderStudySlide();$("studyDialog").showModal();
 }
 function persistStudySlide(){
  const root=get(studyRootId),slide=studySlides[studyIndex];if(!root||!slide)return;
+ if(slide.key==="table"){saveStudyTable();return;}
  if(!root.studyContent||typeof root.studyContent!=="object")root.studyContent={};
  root.studyContent[slide.key]=$("studySlideEditor").value;
  slide.content=root.studyContent[slide.key];
  save();
-
 }
 function renderStudySlide(){
  const slide=studySlides[studyIndex];if(!slide)return;
- $("studySlideContent").textContent=slide.content||"";
- $("studySlideEditor").value=slide.content||"";
- $("studySlideEditor").placeholder="Write "+slide.label.toLowerCase()+" here…";
- $("studySlideContent").hidden=studyEditing;
- $("studySlideEditor").hidden=!studyEditing;
+ const isTable=slide.key==="table";
+ $("studyTableEditor").hidden=!isTable;
+ $("studySlideContent").hidden=isTable||studyEditing;
+ $("studySlideEditor").hidden=isTable||!studyEditing;
+ if(isTable){studyTableData=readStudyTable(slide.content||"");renderStudyTable();}
+ else{$("studySlideContent").textContent=slide.content||"";$("studySlideEditor").value=slide.content||"";$("studySlideEditor").placeholder="Write "+slide.label.toLowerCase()+" here…";}
  $("studySlide").classList.toggle("study-code",slide.label==="Code");
  $("studyPrevBtn").disabled=studyIndex===0;
  $("studyNextBtn").textContent="Done";
  $("studySectionSelect").value=slide.key;
 }
-function moveStudySlide(direction){if(studyEditing){persistStudySlide();studyEditing=false;}const next=studyIndex+direction;if(next<0||next>=studySlides.length)return;studyIndex=next;renderStudySlide();}
+function moveStudySlide(direction){if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();studyEditing=false;const next=studyIndex+direction;if(next<0||next>=studySlides.length)return;studyIndex=next;renderStudySlide();}
 $("studySlideContent").onclick=()=>{if(studyEditing)return;studyEditing=true;renderStudySlide();$("studySlideEditor").focus();};
-$("studySaveSlideBtn").onclick=()=>{if(studyEditing)persistStudySlide();studyEditing=false;renderStudySlide();};
-$("studySectionSelect").onchange=()=>{if(studyEditing)persistStudySlide();const key=$("studySectionSelect").value;studyIndex=studySlides.findIndex(slide=>slide.key===key);if(studyIndex<0)return;studyEditing=!String(studySlides[studyIndex].content||"").trim();renderStudySlide();if(studyEditing)$("studySlideEditor").focus();};
+$("studySaveSlideBtn").onclick=()=>{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();studyEditing=false;renderStudySlide();};
+$("studySectionSelect").onchange=()=>{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();const key=$("studySectionSelect").value;studyIndex=studySlides.findIndex(slide=>slide.key===key);if(studyIndex<0)return;studyEditing=key!=="table"&&!String(studySlides[studyIndex].content||"").trim();renderStudySlide();if(studyEditing)$("studySlideEditor").focus();};
+$("studyPointsTable").addEventListener("input",e=>{
+ const target=e.target;if(target.matches(".study-table-header"))studyTableData.headers[Number(target.dataset.col)]=target.value;
+ else if(target.matches("textarea[data-row]"))studyTableData.rows[Number(target.dataset.row)][Number(target.dataset.col)]=target.value;
+ saveStudyTable();
+});
+$("studyAddRowBtn").onclick=()=>{if(!studyTableData)return;studyTableData.rows.push(Array(studyTableData.headers.length).fill(""));renderStudyTable();saveStudyTable();};
+$("studyAddColumnBtn").onclick=()=>{if(!studyTableData)return;studyTableData.headers.push("Column "+(studyTableData.headers.length+1));studyTableData.rows.forEach(row=>row.push(""));renderStudyTable();saveStudyTable();};
 $("studyPrevBtn").onclick=()=>moveStudySlide(-1);
-$("studyNextBtn").onclick=()=>{if(studyEditing)persistStudySlide();studyEditing=false;$("studyDialog").close();};
+$("studyNextBtn").onclick=()=>{if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();studyEditing=false;$("studyDialog").close();};
 let studyTouchX=0;
 $("studySlide").addEventListener("touchstart",e=>{studyTouchX=e.changedTouches[0].clientX;},{passive:true});
 $("studySlide").addEventListener("touchend",e=>{const delta=e.changedTouches[0].clientX-studyTouchX;if(Math.abs(delta)>45)moveStudySlide(delta<0?1:-1);},{passive:true});
 $("studyDialog").addEventListener("keydown",e=>{if(e.target.matches("textarea,input"))return;if(e.key==="ArrowRight")moveStudySlide(1);if(e.key==="ArrowLeft")moveStudySlide(-1);});
-$("studyDialog").addEventListener("click",e=>{if(e.target=== $("studyDialog"))persistStudySlide();});
+$("studyDialog").addEventListener("click",e=>{if(e.target=== $("studyDialog")){if(studyEditing||studySlides[studyIndex]?.key==="table")persistStudySlide();}});
 
 load();renderLists();dashboard();
 })();
