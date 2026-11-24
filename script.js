@@ -135,7 +135,7 @@ function showView(view,push=true){if(view!==currentView&&push)history.pushState(
 function dashboard(push=true){showView("dashboard",push);}
 function editor(push=true){showView("editor",push);}
 history.replaceState({memoryView:"dashboard"},"",location.href);
-window.addEventListener("popstate",event=>{const view=event.state?.memoryView||"dashboard";showView(view,false);});
+window.addEventListener("popstate",event=>{const sidebar=$("sidebar"),menuButton=$("mobileMenu");if(sidebar?.classList.contains("open")){sidebar.classList.remove("open");if(menuButton){menuButton.textContent="☰";menuButton.setAttribute("aria-expanded","false");menuButton.setAttribute("aria-label","Open navigation menu");}history.replaceState({memoryView:currentView},"",location.href);return;}const view=event.state?.memoryView||(currentView==="editor"?"dashboard":"dashboard");showView(view,false);});
 function openMap(id){activeId=id;selectedId=current().root;zoom=1;panX=25;panY=20;editor();save();}
 function createMap(title="Untitled map",root="Your big idea"){const m=makeMap(title,root);maps.unshift(m);activeId=m.id;selectedId=m.root;zoom=1;panX=25;panY=20;save();editor();}
 let definitionTarget=null;
