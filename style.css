@@ -318,3 +318,52 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
  .study-floating-actions button:last-child{right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom))}
  .study-hint{bottom:max(58px,calc(env(safe-area-inset-bottom) + 48px))}
 }
+
+
+/* Refined Study Mode slides: calmer, lighter, and less bulky */
+.study-slide{
+  width:min(100%,880px);
+  margin:clamp(12px,3vh,26px) auto;
+  padding:clamp(18px,4vw,38px);
+  gap:14px;
+  border:1px solid #30384b;
+  border-radius:16px;
+  background:linear-gradient(155deg,#1b2231,#171d2a 72%);
+  box-shadow:0 12px 36px #0003;
+}
+.study-slide-label{
+  margin:0;
+  color:#a99aff;
+  font-size:10px;
+  letter-spacing:1.6px;
+}
+.study-slide-content{
+  font-size:clamp(16px,2.2vw,22px);
+  line-height:1.6;
+  color:#e7eaf3;
+}
+.study-slide.study-code .study-slide-content{
+  font-size:clamp(13px,1.7vw,16px);
+  line-height:1.65;
+  padding:14px 16px;
+  border:1px solid #303c49;
+  border-radius:10px;
+  background:#111824;
+}
+@media(max-width:600px){
+  .study-slide{
+    margin:12px auto 72px;
+    padding:19px 16px;
+    border-radius:14px;
+    gap:12px;
+  }
+  .study-slide-content{
+    font-size:17px;
+    line-height:1.55;
+  }
+  .study-slide.study-code .study-slide-content{
+    font-size:13px;
+    line-height:1.6;
+    padding:12px;
+  }
+}
