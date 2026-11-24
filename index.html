@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#10121b"><title>Memory — Mind Map Maker</title><link rel="stylesheet" href="style.css?v=20261124-mobile-menu"></head>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#10121b"><title>Memory — Mind Map Maker</title><link rel="stylesheet" href="style.css?v=20261124-mobile-menu3"></head>
 <body><div class="app-shell">
 <aside class="sidebar" id="sidebar"><div class="brand"><div class="brand-mark">✳</div><div><strong>memory</strong><small>YOUR THOUGHT SPACE</small></div></div><button class="new-map-btn" id="newMapBtn">＋ <span>New mind map</span></button><div class="side-label">WORKSPACE</div><button class="side-link active" id="workspaceBtn">◫ <span>All mind maps</span></button><button class="side-link" id="templatesBtn">✧ <span>Quick start ideas</span></button><div class="side-label map-label">YOUR MAPS <span id="mapCount">0</span></div><div class="map-list" id="mapList"></div><div class="sidebar-bottom"><div class="profile-dot" id="profileDot">M</div><div class="account-info"><strong id="accountName">My workspace</strong><small id="cloudStatus">Saved on this device</small><button class="account-btn" id="googleSignInBtn" type="button">Continue with Google</button><button class="account-btn" id="signOutBtn" type="button" hidden>Sign out</button></div></div></aside>
 <main class="main-area"><header class="topbar"><button class="mobile-menu" id="mobileMenu" type="button" aria-label="Open navigation menu" aria-controls="sidebar" aria-expanded="false">☰</button><div class="breadcrumbs"><span>Workspace</span><b>/</b><strong id="crumbTitle">Untitled map</strong></div><div class="top-actions"><span class="save-status" id="saveStatus">● All changes saved</span><button class="btn btn-quiet" id="exportBtn">↧ <span>Export</span></button><button class="btn btn-primary" id="shareBtn">Share / Save</button></div></header>
@@ -9,4 +9,20 @@
 <dialog id="nodeDialog"><form method="dialog" id="nodeForm"><div class="dialog-top"><div><span class="eyebrow">MAKE IT YOURS</span><h2 id="nodeDialogTitle">Add a topic</h2></div><button type="submit" class="icon-close" value="cancel" formnovalidate aria-label="Close">×</button></div><label for="nodeText">Topic name</label><input id="nodeText" maxlength="120" placeholder="Write your idea…" required><div class="dialog-actions"><button type="submit" class="btn btn-quiet" value="cancel" formnovalidate>Cancel</button><button class="btn btn-primary" id="nodeSaveBtn" value="save">Save topic</button></div></form></dialog>
 <dialog id="definitionDialog"><form method="dialog" id="definitionForm"><div class="dialog-top"><div><span class="eyebrow">TOPIC DETAILS</span><h2 id="definitionTitle">Definition</h2></div><button class="icon-close" type="submit" value="cancel" formnovalidate aria-label="Close">×</button></div><label for="definitionText">Definition / notes</label><textarea id="definitionText" rows="5" maxlength="1200" placeholder="Write what this topic means…"></textarea><div class="dialog-actions"><button class="btn btn-quiet" type="submit" value="cancel" formnovalidate>Cancel</button><button class="btn btn-primary" id="saveDefinitionBtn" type="button">Save definition</button></div></form></dialog>
 <dialog id="importDialog"><form method="dialog" id="importForm"><div class="dialog-top"><div><h2>Create an AI mind map</h2></div><button class="icon-close" value="cancel">×</button></div><textarea id="importText" rows="7" placeholder="Paste your notes here…"></textarea><div class="dialog-actions"><button class="btn btn-quiet" id="pdfChooseBtn" type="button">▤ Upload PDF</button><button class="btn btn-primary" id="importTextBtn" type="button">✧ Generate AI mind map</button></div><p id="aiStatus" class="helper-note" aria-live="polite"></p></form></dialog>
-<input type="file" id="pdfFile" accept=".pdf,application/pdf" hidden><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script type="module" src="script.js?v=20261124-mobile-menu2"></script></body></html>
+<input type="file" id="pdfFile" accept=".pdf,application/pdf" hidden><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script type="module" src="script.js?v=20261124-mobile-menu3"></script><script>
+(function(){
+ const button=document.getElementById("mobileMenu");
+ const sidebar=document.getElementById("sidebar");
+ if(!button||!sidebar)return;
+ function closeMenu(){sidebar.classList.remove("open");button.setAttribute("aria-expanded","false");button.setAttribute("aria-label","Open navigation menu");}
+ button.addEventListener("click",function(){
+  const opened=sidebar.classList.toggle("open");
+  button.setAttribute("aria-expanded",String(opened));
+  button.setAttribute("aria-label",opened?"Close navigation menu":"Open navigation menu");
+ });
+ document.addEventListener("click",function(event){
+  if(event.target.closest("#mapList,#workspaceBtn,#templatesBtn,#newMapBtn"))closeMenu();
+ });
+ document.addEventListener("keydown",function(event){if(event.key==="Escape")closeMenu();});
+})();
+</script></body></html>
