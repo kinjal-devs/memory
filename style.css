@@ -574,3 +574,82 @@ dialog{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
   .study-slide-content{font-size:14px !important;line-height:1.5 !important}
   .study-floating-actions button,.study-controls button{min-height:29px !important;padding:5px 8px !important;font-size:10px !important}
 }
+
+
+/* Minimal Study Mode: one floating text box, no nested slide panel */
+.study-dialog{
+  width:min(370px,calc(100vw - 28px)) !important;
+  max-width:370px !important;
+  max-height:70dvh !important;
+  padding:15px 16px 13px !important;
+  gap:11px !important;
+  border:1px solid #3b4052 !important;
+  border-radius:13px !important;
+  background:rgba(20,24,36,.97) !important;
+  box-shadow:0 12px 38px #0009 !important;
+}
+.study-head{padding:0 25px 0 0 !important;min-height:22px !important}
+.study-head>div:first-child{padding:0 !important}
+.study-head .eyebrow,.study-head h2{display:none !important}
+.study-head .icon-close{top:8px !important;right:9px !important;font-size:20px !important}
+.study-progress{display:none !important}
+.study-slide{display:contents !important}
+.study-slide-label{display:none !important}
+.study-slide-content{
+  display:block !important;
+  width:100% !important;
+  max-height:48dvh !important;
+  overflow:auto !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#eef0f7 !important;
+  font:14px/1.65 'DM Sans',sans-serif !important;
+  white-space:pre-wrap !important;
+}
+.study-slide.study-code .study-slide-content{
+  font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace !important;
+  color:#c6efd9 !important;
+}
+.study-slide-editor{
+  display:block !important;
+  width:100% !important;
+  min-height:110px !important;
+  max-height:38dvh !important;
+  padding:10px !important;
+  font:14px/1.6 'DM Sans',sans-serif !important;
+}
+.study-slide-actions{display:flex;gap:7px;align-items:center}
+.study-slide-actions span{font-size:9px}
+.study-slide-actions button{min-height:29px !important;padding:5px 9px !important;font-size:10px !important}
+.study-floating-actions,.study-controls{
+  position:static !important;
+  inset:auto !important;
+  transform:none !important;
+  display:flex !important;
+  flex-direction:row !important;
+  gap:6px !important;
+  justify-content:flex-end !important;
+  margin:0 !important;
+}
+.study-floating-actions{order:3}
+.study-controls{order:4;justify-content:space-between !important}
+.study-floating-actions button,.study-controls button{
+  position:static !important;
+  min-height:28px !important;
+  min-width:0 !important;
+  padding:5px 8px !important;
+  border-radius:7px !important;
+  font-size:10px !important;
+  box-shadow:none !important;
+}
+.study-controls button{flex:1}
+.study-hint{display:none !important}
+@media(max-width:600px){
+  .study-dialog{width:min(340px,calc(100vw - 24px)) !important;padding:13px !important;gap:9px !important}
+  .study-slide-content{font-size:13px !important;line-height:1.6 !important}
+  .study-slide.study-code .study-slide-content{font-size:11px !important}
+}
